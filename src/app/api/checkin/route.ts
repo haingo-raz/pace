@@ -2,8 +2,8 @@ import { z } from 'zod'
 import { ApiError, ok, withRoute } from '@/lib/api'
 import { requireUser } from '@/lib/auth'
 import { sql } from '@/lib/db'
-import { ensureProfile } from '@/lib/queries/profile'
-import { insertCheckin } from '@/lib/queries/checkins'
+import { ensureProfile, getProfile } from '@/lib/queries/profile'
+import { insertCheckin, updateTodayMood } from '@/lib/queries/checkins'
 import { todayFor } from '@/lib/queries/day'
 import { awardPointsTx } from '@/lib/points'
 import { logger } from '@/lib/logger'
@@ -55,5 +55,22 @@ export const POST = withRoute(
       { pointsAwarded: POINTS_MOOD_CHECKIN, pointsTotal },
       requestId,
     )
+  },
+)
+
+export const PATCH = withRoute(
+  'PATCH /api/checkin',
+  async (req, _ctx, requestId) => {
+    const userId = await requireUser()
+    const raw: unknown = await req.json().catch(() => ({}))
+    const { mood } = bodySchema.parse(raw)
+
+    const profile = await getProfile(userId)
+    const today = todayFor(profile?.timezone ?? DEFAULT_TIMEZONE)
+    const updated = await updateTodayMood(userId, today, mood)
+    if (!updated) {
+      throw new ApiError('NOT_FOUND', 'No check-in to update today.')
+    }
+    return ok({ mood: updated.mood_score }, requestId)
   },
 )

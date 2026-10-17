@@ -21,6 +21,11 @@ export const copy = {
     skip: 'Skip for now',
     done: 'Logged for today',
     announced: 'Logged. You earned {points} points.',
+    todayMood: 'Today: {mood}',
+    change: 'Feeling different? Change it.',
+    todayStats: '{points} points today, {tasks} tasks done',
+    changeAnnounced: 'Mood updated to {mood}.',
+    changeFailed: 'Could not update your mood.',
   },
   tasks: {
     heading: 'Today',
@@ -48,6 +53,9 @@ export const copy = {
     loadFailed: 'Could not load your tasks.',
     requiredIndicator: '*',
     requiredAria: 'required',
+    expandTitle: 'Show full title: {title}',
+    collapseTitle: 'Collapse title: {title}',
+    clearDifficultyAria: 'Clear difficulty',
     moodNote: {
       1: 'Ordered for a rough day. Gentlest first.',
       2: 'Ordered for an okay day. Easiest first.',

@@ -166,6 +166,38 @@ export async function hasDismissedToday(
   return !!row?.exists
 }
 
+export async function getTodayTotals(
+  userId: string,
+  timezone: string,
+  today: string,
+  tx: Db = sql,
+): Promise<{ pointsToday: number; tasksDoneToday: number }> {
+  const [row] = await tx<
+    { points_today: number; tasks_done_today: number }[]
+  >`
+    with p as (
+      select coalesce(sum(amount), 0)::int as points_today
+      from points_log
+      where user_id = ${userId}
+        and amount > 0
+        and (time at time zone ${timezone})::date = ${today}::date
+    ),
+    t as (
+      select count(*)::int as tasks_done_today
+      from tasks
+      where user_id = ${userId}
+        and completed_at is not null
+        and (completed_at at time zone ${timezone})::date = ${today}::date
+    )
+    select p.points_today, t.tasks_done_today
+    from p, t
+  `
+  return {
+    pointsToday: Number(row?.points_today ?? 0),
+    tasksDoneToday: Number(row?.tasks_done_today ?? 0),
+  }
+}
+
 export async function dismissInsight(
   userId: string,
   pattern: string,

@@ -1,10 +1,12 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { PointsBadge } from '@/components/PointsBadge'
 import { MoodCheckIn } from '@/components/MoodCheckIn'
+import { TodayCard } from '@/components/TodayCard'
 import { AddTaskForm } from '@/components/AddTaskForm'
 import { GoalPlanner } from '@/components/GoalPlanner'
 import { InsightCard } from '@/components/InsightCard'
@@ -22,6 +24,9 @@ type Props = {
   pointsTotal: number
   streakCount: number
   hasCheckedIn: boolean
+  todayMood: MoodScore | null
+  pointsToday: number
+  tasksDoneToday: number
   initialGroups: OrderedTasks
   initialMood: MoodScore | null
   insight: Insight
@@ -32,33 +37,27 @@ type Props = {
 type GroupsResponse = OrderedTasks & { mood: MoodScore | null }
 
 export function DashboardShell({
-  pointsTotal: initialPoints,
+  pointsTotal,
   streakCount,
   hasCheckedIn: initialChecked,
+  todayMood,
+  pointsToday,
+  tasksDoneToday,
   initialGroups,
   initialMood,
   insight,
   insightSentence,
   streakAtRisk,
 }: Props) {
-  const [points, setPoints] = useState(initialPoints)
+  const router = useRouter()
   const [delta, setDelta] = useState<number | null>(null)
   const [hasCheckedIn, setHasCheckedIn] = useState(initialChecked)
   const [groups, setGroups] = useState<OrderedTasks>(initialGroups)
   const [mood, setMood] = useState<MoodScore | null>(initialMood)
   const [refreshFailed, setRefreshFailed] = useState(false)
   const [tab, setTab] = useState<'manual' | 'plan'>('manual')
-  const loggedRef = useRef<HTMLDivElement>(null)
-  const shouldFocusLogged = useRef(false)
   const deltaTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const refreshSeq = useRef(0)
-
-  useEffect(() => {
-    if (hasCheckedIn && shouldFocusLogged.current && loggedRef.current) {
-      loggedRef.current.focus()
-      shouldFocusLogged.current = false
-    }
-  }, [hasCheckedIn])
 
   useEffect(() => {
     return () => {
@@ -66,12 +65,12 @@ export function DashboardShell({
     }
   }, [])
 
-  function bumpPoints(pointsAwarded: number, pointsTotal: number | null) {
-    if (pointsAwarded <= 0 || pointsTotal === null) return
-    setPoints(pointsTotal)
+  function bumpPoints(pointsAwarded: number) {
+    if (pointsAwarded <= 0) return
     setDelta(pointsAwarded)
     if (deltaTimer.current) clearTimeout(deltaTimer.current)
     deltaTimer.current = setTimeout(() => setDelta(null), POINTS_DELTA_MS)
+    router.refresh()
   }
 
   const refresh = useCallback(async () => {
@@ -92,9 +91,9 @@ export function DashboardShell({
   }, [])
 
   function onCheckedIn(res: CheckinResponse | null) {
-    if (res) bumpPoints(res.pointsAwarded, res.pointsTotal)
-    shouldFocusLogged.current = true
+    if (res) bumpPoints(res.pointsAwarded)
     setHasCheckedIn(true)
+    router.refresh()
     void refresh()
   }
 
@@ -112,7 +111,7 @@ export function DashboardShell({
           {copy.app.name}
         </h1>
         <div className="flex items-center gap-3">
-          <PointsBadge total={points} delta={delta} />
+          <PointsBadge total={pointsTotal} delta={delta} />
           <span
             className="text-sm text-[var(--muted)]"
             style={{ fontVariantNumeric: 'tabular-nums' }}
@@ -137,15 +136,13 @@ export function DashboardShell({
       </section>
 
       <section className="mt-6">
-        {hasCheckedIn ? (
-          <Card
-            ref={loggedRef}
-            tabIndex={-1}
-            aria-live="polite"
-            className="focus:outline-none"
-          >
-            <p className="text-[var(--muted)]">{copy.checkin.done}</p>
-          </Card>
+        {hasCheckedIn && todayMood !== null ? (
+          <TodayCard
+            initialMood={todayMood}
+            pointsToday={pointsToday}
+            tasksDoneToday={tasksDoneToday}
+            onChanged={() => router.refresh()}
+          />
         ) : (
           <MoodCheckIn onCheckedIn={onCheckedIn} />
         )}
@@ -222,7 +219,7 @@ export function DashboardShell({
             <AddTaskForm
               onAdded={(res) => {
                 announce(copy.tasks.announcedAdded)
-                bumpPoints(res.pointsAwarded, res.pointsTotal)
+                bumpPoints(res.pointsAwarded)
                 void refresh()
               }}
             />
@@ -236,6 +233,7 @@ export function DashboardShell({
             <GoalPlanner
               onAccepted={() => {
                 setTab('manual')
+                router.refresh()
                 void refresh()
               }}
             />
@@ -244,7 +242,7 @@ export function DashboardShell({
             groups={groups}
             mood={mood}
             onCompleted={(m) => {
-              bumpPoints(m.pointsAwarded, m.pointsTotal)
+              bumpPoints(m.pointsAwarded)
               void refresh()
             }}
             onDeleted={() => {

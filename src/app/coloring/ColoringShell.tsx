@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
 import { PointsBadge } from '@/components/PointsBadge'
 import { ColoringCanvas } from '@/components/ColoringCanvas'
@@ -37,6 +38,7 @@ export function ColoringShell({
   initialComplete,
 }: Props) {
   const toast = useToast()
+  const router = useRouter()
   const [state, setState] = useState<Record<string, string>>(initialState)
   const [pointsTotal, setPointsTotal] = useState(initialPointsTotal)
   const [complete, setComplete] = useState(initialComplete)
@@ -69,6 +71,7 @@ export function ColoringShell({
       setState(res.data.state)
       setPointsTotal(res.data.pointsTotal)
       setComplete(res.data.complete)
+      router.refresh()
       const fillMsg = fill(copy.coloring.announced, {
         position,
         colour: colourName(selected),
@@ -80,7 +83,7 @@ export function ColoringShell({
           : fillMsg,
       )
     },
-    [pending, complete, selected, toast],
+    [pending, complete, selected, toast, router],
   )
 
   return (

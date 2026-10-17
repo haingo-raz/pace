@@ -18,6 +18,26 @@ export async function getTodayCheckin(
 }
 
 /**
+ * Updates mood_score for today's row. Returns the updated row, or null when
+ * no row exists for today (the caller translates null to NOT_FOUND).
+ * No points are awarded as the +10 already fired on the original check-in.
+ */
+export async function updateTodayMood(
+  userId: string,
+  today: string,
+  mood: MoodScore,
+  tx: Db = sql,
+): Promise<Checkin | null> {
+  const [row] = await tx<Checkin[]>`
+    update checkins
+    set mood_score = ${mood}
+    where user_id = ${userId} and day = ${today}
+    returning day, user_id, mood_score, created_at
+  `
+  return row ?? null
+}
+
+/**
  * Insert on conflict do nothing. Returns the day when inserted, or null when
  * the user had already checked in today. The caller decides what to do.
  */

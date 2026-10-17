@@ -1,6 +1,7 @@
 'use client'
 
 import { FormEvent, useId, useRef, useState } from 'react'
+import { X } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -155,6 +156,19 @@ export function AddTaskForm({ onAdded }: Props) {
             >
               {difficultyTouched ? difficulty : copy.tasks.difficultyPlaceholder}
             </span>
+            {difficultyTouched ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setDifficulty(DIFFICULTY_DEFAULT)
+                  setDifficultyTouched(false)
+                }}
+                aria-label={copy.tasks.clearDifficultyAria}
+                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md text-[var(--muted)] hover:text-[var(--danger)]"
+              >
+                <X aria-hidden="true" className="h-5 w-5" />
+              </button>
+            ) : null}
           </div>
           <p id={sliderHintId} className="text-sm text-[var(--muted)]">
             {difficultyTouched

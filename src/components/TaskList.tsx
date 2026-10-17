@@ -22,7 +22,6 @@ type Props = {
   onDeleted: (id: string) => void
 }
 
-/** YYYY-MM-DD portion of an ISO string. */
 function stableDay(iso: string): string {
   return iso.slice(0, 10)
 }
@@ -97,83 +96,15 @@ export function TaskList({ groups, mood, onCompleted, onDeleted }: Props) {
   }
 
   function renderItem(t: Task) {
-    const done = !!t.completed_at
-    const overdue =
-      mounted &&
-      !done &&
-      t.deadline !== null &&
-      new Date(t.deadline) < new Date()
-    const completeAria = done
-      ? fill(copy.tasks.completedLabel, { title: t.title })
-      : fill(copy.tasks.completeLabel, { title: t.title })
     return (
-      <li key={t.id}>
-        <Card
-          className={
-            'flex items-center justify-between gap-3 py-3 ' +
-            (done ? 'opacity-70' : '')
-          }
-        >
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <button
-              type="button"
-              onClick={() => complete(t)}
-              disabled={done || busyId === t.id}
-              aria-label={completeAria}
-              className={
-                'flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border ' +
-                (done
-                  ? 'border-[var(--secondary)] bg-[var(--secondary)]/20 text-[var(--secondary)]'
-                  : 'border-[var(--border)] bg-[var(--raised)] text-[var(--muted)] hover:border-[var(--primary-strong)] hover:text-[var(--primary-strong)]')
-              }
-            >
-              <Check aria-hidden="true" className="h-5 w-5" />
-            </button>
-            <div className="min-w-0 flex-1">
-              <p
-                className={
-                  'truncate text-[var(--text)] ' + (done ? 'line-through' : '')
-                }
-              >
-                {t.title}
-              </p>
-              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--muted)]">
-                <span
-                  style={{
-                    fontFamily: 'var(--font-jetbrains)',
-                    fontVariantNumeric: 'tabular-nums',
-                  }}
-                >
-                  {t.difficulty === null
-                    ? copy.tasks.difficultyUnrated
-                    : fill(copy.tasks.difficulty, { n: t.difficulty })}
-                </span>
-                {t.deadline ? (
-                  <span
-                    className={
-                      overdue ? 'text-[var(--danger)] font-medium' : ''
-                    }
-                  >
-                    {overdue
-                      ? copy.tasks.overdue + copy.tasks.metaSeparator
-                      : ''}
-                    {fill(copy.tasks.due, { date: stableDay(t.deadline) })}
-                  </span>
-                ) : null}
-              </div>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => remove(t)}
-            disabled={busyId === t.id}
-            aria-label={fill(copy.tasks.deleteLabel, { title: t.title })}
-            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md text-[var(--muted)] hover:text-[var(--danger)]"
-          >
-            <Trash2 aria-hidden="true" className="h-5 w-5" />
-          </button>
-        </Card>
-      </li>
+      <TaskRow
+        key={t.id}
+        task={t}
+        mounted={mounted}
+        busyHere={busyId === t.id}
+        onComplete={() => complete(t)}
+        onRemove={() => remove(t)}
+      />
     )
   }
 
@@ -218,5 +149,113 @@ export function TaskList({ groups, mood, onCompleted, onDeleted }: Props) {
         </>
       )}
     </>
+  )
+}
+
+function TaskRow({
+  task,
+  mounted,
+  busyHere,
+  onComplete,
+  onRemove,
+}: {
+  task: Task
+  mounted: boolean
+  busyHere: boolean
+  onComplete: () => void
+  onRemove: () => void
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const done = !!task.completed_at
+  const overdue =
+    mounted &&
+    !done &&
+    task.deadline !== null &&
+    new Date(task.deadline) < new Date()
+  const completeAria = done
+    ? fill(copy.tasks.completedLabel, { title: task.title })
+    : fill(copy.tasks.completeLabel, { title: task.title })
+  const titleAria = expanded
+    ? fill(copy.tasks.collapseTitle, { title: task.title })
+    : fill(copy.tasks.expandTitle, { title: task.title })
+
+  return (
+    <li>
+      <Card
+        className={
+          'flex items-center justify-between gap-3 py-3 ' +
+          (done ? 'opacity-70' : '')
+        }
+      >
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <button
+            type="button"
+            onClick={onComplete}
+            disabled={done || busyHere}
+            aria-label={completeAria}
+            className={
+              'flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border ' +
+              (done
+                ? 'border-[var(--secondary)] bg-[var(--secondary)]/20 text-[var(--secondary)]'
+                : 'border-[var(--border)] bg-[var(--raised)] text-[var(--muted)] hover:border-[var(--primary-strong)] hover:text-[var(--primary-strong)]')
+            }
+          >
+            <Check aria-hidden="true" className="h-5 w-5" />
+          </button>
+          <div className="min-w-0 flex-1">
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              aria-expanded={expanded}
+              aria-label={titleAria}
+              className="block w-full text-left focus:outline-none"
+            >
+              <span
+                className={
+                  'block text-[var(--text)] ' +
+                  (done ? 'line-through ' : '') +
+                  (expanded
+                    ? 'line-clamp-3 overflow-y-auto max-h-[4.5em]'
+                    : 'line-clamp-1')
+                }
+              >
+                {task.title}
+              </span>
+            </button>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--muted)]">
+              <span
+                style={{
+                  fontFamily: 'var(--font-jetbrains)',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {task.difficulty === null
+                  ? copy.tasks.difficultyUnrated
+                  : fill(copy.tasks.difficulty, { n: task.difficulty })}
+              </span>
+              {task.deadline ? (
+                <span
+                  className={overdue ? 'text-[var(--danger)] font-medium' : ''}
+                >
+                  {overdue
+                    ? copy.tasks.overdue + copy.tasks.metaSeparator
+                    : ''}
+                  {fill(copy.tasks.due, { date: stableDay(task.deadline) })}
+                </span>
+              ) : null}
+            </div>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onRemove}
+          disabled={busyHere}
+          aria-label={fill(copy.tasks.deleteLabel, { title: task.title })}
+          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md text-[var(--muted)] hover:text-[var(--danger)]"
+        >
+          <Trash2 aria-hidden="true" className="h-5 w-5" />
+        </button>
+      </Card>
+    </li>
   )
 }
