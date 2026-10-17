@@ -14,6 +14,7 @@ import { COLOUR_PALETTE, COST_COLOR_SECTION } from '@/config/constants'
 import type { ColoringPage } from '@/types'
 
 type Props = {
+  pages: ColoringPage[]
   initialPage: ColoringPage
   initialState: Record<string, string>
   initialPointsTotal: number
@@ -26,12 +27,20 @@ type FillResponse = {
   complete: boolean
 }
 
+type LoadResponse = {
+  page: ColoringPage
+  state: Record<string, string>
+  pointsTotal: number
+  complete: boolean
+}
+
 function colourName(hex: string): string {
   const h = hex.toUpperCase()
   return COLOUR_PALETTE.find((p) => p.hex.toUpperCase() === h)?.name ?? hex
 }
 
 export function ColoringShell({
+  pages,
   initialPage,
   initialState,
   initialPointsTotal,
@@ -39,15 +48,34 @@ export function ColoringShell({
 }: Props) {
   const toast = useToast()
   const router = useRouter()
+  const [page, setPage] = useState<ColoringPage>(initialPage)
   const [state, setState] = useState<Record<string, string>>(initialState)
   const [pointsTotal, setPointsTotal] = useState(initialPointsTotal)
   const [complete, setComplete] = useState(initialComplete)
   const [selected, setSelected] = useState<string>(COLOUR_PALETTE[0].hex)
   const [pending, setPending] = useState(false)
+  const [switching, setSwitching] = useState(false)
 
-  const total = initialPage.sections.length
+  const total = page.sections.length
   const done = Object.keys(state).length
   const unaffordable = pointsTotal < COST_COLOR_SECTION
+
+  async function switchTo(nextPage: ColoringPage) {
+    if (nextPage.id === page.id || switching || pending) return
+    setSwitching(true)
+    const res = await apiFetch<LoadResponse>(
+      `/api/coloring?pageId=${nextPage.id}`,
+    )
+    setSwitching(false)
+    if (!res.ok) {
+      toast.error(copy.coloring.loadFailed)
+      return
+    }
+    setPage(res.data.page)
+    setState(res.data.state)
+    setPointsTotal(res.data.pointsTotal)
+    setComplete(res.data.complete)
+  }
 
   const onFill = useCallback(
     async (sectionId: string, position: number) => {
@@ -56,7 +84,7 @@ export function ColoringShell({
       setPending(true)
       const res = await apiFetch<FillResponse>('/api/coloring/section', {
         method: 'POST',
-        body: JSON.stringify({ sectionId, colour: selected }),
+        body: JSON.stringify({ pageId: page.id, sectionId, colour: selected }),
       })
       setPending(false)
 
@@ -83,7 +111,7 @@ export function ColoringShell({
           : fillMsg,
       )
     },
-    [pending, complete, selected, toast, router],
+    [pending, complete, selected, page.id, toast, router],
   )
 
   return (
@@ -97,19 +125,48 @@ export function ColoringShell({
             textWrap: 'balance',
           }}
         >
-          {initialPage.name}
+          {page.name}
         </h1>
         <PointsBadge total={pointsTotal} delta={null} />
       </header>
 
-      <p className="mt-2 text-sm text-[var(--muted)]">
+      <div
+        role="tablist"
+        aria-label={copy.coloring.pageSwitcherLabel}
+        className="mt-4 flex flex-wrap gap-2"
+      >
+        {pages.map((p) => {
+          const active = p.id === page.id
+          return (
+            <button
+              key={p.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => switchTo(p)}
+              disabled={switching || pending}
+              className={
+                'min-h-11 rounded-full border px-4 text-sm font-medium ' +
+                'disabled:cursor-not-allowed disabled:opacity-60 ' +
+                (active
+                  ? 'border-[var(--primary-strong)] bg-[var(--raised)] text-[var(--text)]'
+                  : 'border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--text)]')
+              }
+            >
+              {p.name}
+            </button>
+          )
+        })}
+      </div>
+
+      <p className="mt-4 text-sm text-[var(--muted)]">
         {fill(copy.coloring.costNote, { cost: COST_COLOR_SECTION })}
       </p>
 
-      <section className="mt-6">
-        <Card>
+      <section className="mt-4">
+        <Card className="!p-3 md:!p-4">
           <ColoringCanvas
-            page={initialPage}
+            page={page}
             state={state}
             pointsTotal={pointsTotal}
             pending={pending}

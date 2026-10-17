@@ -3,8 +3,8 @@ import { ok, withRoute, ApiError } from '@/lib/api'
 import { requireUser } from '@/lib/auth'
 import {
   fillSection,
-  getActivePage,
   getOrCreateDrawing,
+  listPages,
 } from '@/lib/queries/coloring'
 import { logger } from '@/lib/logger'
 import {
@@ -16,6 +16,7 @@ import {
 
 const bodySchema = z
   .object({
+    pageId: z.string().uuid(),
     sectionId: z.string().min(1).max(SECTION_ID_MAX),
     colour: z
       .string()
@@ -28,7 +29,7 @@ export const POST = withRoute(
   async (req, _ctx, requestId) => {
     const userId = await requireUser()
     const raw: unknown = await req.json().catch(() => ({}))
-    const { sectionId, colour } = bodySchema.parse(raw)
+    const { pageId, sectionId, colour } = bodySchema.parse(raw)
 
     const normalisedColour = colour.toUpperCase()
     const allowed = COLOUR_PALETTE.some(
@@ -40,9 +41,10 @@ export const POST = withRoute(
       })
     }
 
-    const page = await getActivePage()
+    const pages = await listPages()
+    const page = pages.find((p) => p.id === pageId)
     if (!page) {
-      throw new ApiError('NOT_FOUND', 'No coloring page is available.')
+      throw new ApiError('NOT_FOUND', 'That page is not available.')
     }
     const validIds = new Set(page.sections.map((s) => s.id))
     if (!validIds.has(sectionId)) {

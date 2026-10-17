@@ -104,6 +104,10 @@ export const COLOUR_PALETTE: ReadonlyArray<{ name: string; hex: string }> = [
   { name: 'Lavender', hex: asHex(0xb5a1d4) },
   { name: 'Sky', hex: asHex(0x7fb2d4) },
   { name: 'Clay', hex: asHex(0xb8512a) },
+  { name: 'Rose', hex: asHex(0xc85a7a) },
+  { name: 'Mauve', hex: asHex(0x9a89b4) },
+  { name: 'Sand', hex: asHex(0xd9c29a) },
+  { name: 'Slate', hex: asHex(0x5f7a95) },
 ]
 
 /** Closed set of ledger reasons; mirrors docs/SCHEMA.sql. */

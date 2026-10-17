@@ -37,11 +37,12 @@ export function ColoringCanvas({
     <div
       role="group"
       aria-label={copy.coloring.heading}
-      className="overflow-x-auto"
+      className="flex justify-center"
     >
       <svg
         viewBox={page.view_box}
-        className="max-w-full h-auto"
+        preserveAspectRatio="xMidYMid meet"
+        className="h-auto w-[80%] max-h-[55vh] md:w-auto md:max-w-full md:max-h-[50vh]"
         style={{ touchAction: 'manipulation' }}
       >
         {page.sections.map((s, i) => {

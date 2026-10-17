@@ -15,7 +15,7 @@ export function ColourPicker({ selected, onPick, disabled = false }: Props) {
     <div
       role="group"
       aria-label={copy.coloring.pickerLabel}
-      className="flex flex-wrap gap-2"
+      className="grid grid-cols-5 gap-2 md:grid-cols-10"
     >
       {COLOUR_PALETTE.map(({ name, hex }) => {
         const hexNorm = hex.toUpperCase()
@@ -28,7 +28,7 @@ export function ColourPicker({ selected, onPick, disabled = false }: Props) {
             aria-pressed={pressed}
             disabled={disabled}
             className={
-              'inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-medium ' +
+              'inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border px-3 text-sm font-medium ' +
               'disabled:cursor-not-allowed disabled:opacity-60 ' +
               (pressed
                 ? 'border-[var(--primary-strong)] ring-2 ring-[var(--primary-strong)] bg-[var(--raised)] text-[var(--text)]'
@@ -37,10 +37,10 @@ export function ColourPicker({ selected, onPick, disabled = false }: Props) {
           >
             <span
               aria-hidden="true"
-              className="inline-block h-4 w-4 rounded-full border border-[var(--border)]"
+              className="inline-block h-4 w-4 flex-shrink-0 rounded-full border border-[var(--border)]"
               style={{ background: hex }}
             />
-            <span>{name}</span>
+            <span className="truncate">{name}</span>
           </button>
         )
       })}

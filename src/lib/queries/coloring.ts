@@ -12,14 +12,39 @@ type Db = Sql | TransactionSql
 
 type PageRow = Omit<ColoringPage, 'view_box'> & { view_box: string }
 
-export async function getActivePage(tx: Db = sql): Promise<ColoringPage | null> {
-  const [row] = await tx<PageRow[]>`
+export async function listPages(tx: Db = sql): Promise<ColoringPage[]> {
+  const rows = await tx<PageRow[]>`
     select id, slug, name, view_box, sections, total_sections
     from coloring_pages
     order by slug
-    limit 1
+  `
+  return rows
+}
+
+export async function getPageBySlug(
+  slug: string,
+  tx: Db = sql,
+): Promise<ColoringPage | null> {
+  const [row] = await tx<PageRow[]>`
+    select id, slug, name, view_box, sections, total_sections
+    from coloring_pages
+    where slug = ${slug}
   `
   return row ?? null
+}
+
+/** Returns the pageId of the user's most recently touched drawing, or null. */
+export async function getMostRecentPageId(
+  userId: string,
+  tx: Db = sql,
+): Promise<string | null> {
+  const [row] = await tx<{ page_id: string }[]>`
+    select page_id from user_drawings
+    where user_id = ${userId}
+    order by created_at desc
+    limit 1
+  `
+  return row?.page_id ?? null
 }
 
 type DrawingRow = Omit<UserDrawing, 'completed_at' | 'created_at'> & {

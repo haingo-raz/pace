@@ -118,6 +118,7 @@ export const copy = {
     loadFailed: 'Could not load your page.',
     retry: 'Try again',
     sectionAria: 'Section {position} of {total}, {status}',
+    pageSwitcherLabel: 'Choose a page',
   },
   nav: {
     label: 'Primary',
