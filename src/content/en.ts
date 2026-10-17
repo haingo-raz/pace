@@ -48,6 +48,12 @@ export const copy = {
     loadFailed: 'Could not load your tasks.',
     requiredIndicator: '*',
     requiredAria: 'required',
+    moodNote: {
+      1: 'Ordered for a rough day. Gentlest first.',
+      2: 'Ordered for an okay day. Easiest first.',
+      3: 'Ordered for a good day. Meatier work first.',
+      4: 'Ordered for a great day. Hardest first.',
+    },
     titleRequired: 'Give the task a short name.',
     titleTooLong: 'Keep it under {max} characters.',
     difficultyPlaceholder: '—',

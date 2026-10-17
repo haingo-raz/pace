@@ -4,7 +4,7 @@ import { DashboardShell } from './DashboardShell'
 import { requireUser } from '@/lib/auth'
 import { runDailyVisit } from '@/lib/dailyVisit'
 import { getTodayCheckin } from '@/lib/queries/checkins'
-import { listTasks } from '@/lib/queries/tasks'
+import { listTasksOrdered } from '@/lib/queries/tasks'
 import { todayFor } from '@/lib/queries/day'
 
 export const instant = false
@@ -14,10 +14,9 @@ export default async function DashboardPage() {
   const userId = await requireUser()
   const { profile } = await runDailyVisit(userId)
   const today = todayFor(profile.timezone)
-  const [todayCheckin, tasks] = await Promise.all([
-    getTodayCheckin(userId, today),
-    listTasks(userId),
-  ])
+  const todayCheckin = await getTodayCheckin(userId, today)
+  const mood = todayCheckin?.mood_score ?? null
+  const groups = await listTasksOrdered(userId, mood)
 
   return (
     <AppShell>
@@ -25,7 +24,8 @@ export default async function DashboardPage() {
         pointsTotal={profile.points_total}
         streakCount={profile.streak_count}
         hasCheckedIn={!!todayCheckin}
-        initialTasks={tasks}
+        initialGroups={groups}
+        initialMood={mood}
       />
     </AppShell>
   )

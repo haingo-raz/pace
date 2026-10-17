@@ -2,7 +2,10 @@ import { z } from 'zod'
 import { ok, withRoute } from '@/lib/api'
 import { requireUser } from '@/lib/auth'
 import { sql } from '@/lib/db'
-import { listTasks, insertTask } from '@/lib/queries/tasks'
+import { listTasksOrdered, insertTask } from '@/lib/queries/tasks'
+import { getProfile } from '@/lib/queries/profile'
+import { getTodayCheckin } from '@/lib/queries/checkins'
+import { todayFor } from '@/lib/queries/day'
 import { awardPointsTx } from '@/lib/points'
 import { logger } from '@/lib/logger'
 import {
@@ -17,8 +20,12 @@ import type { Difficulty } from '@/types'
 
 export const GET = withRoute('GET /api/tasks', async (_req, _ctx, requestId) => {
   const userId = await requireUser()
-  const tasks = await listTasks(userId)
-  return ok({ tasks }, requestId)
+  const profile = await getProfile(userId)
+  const today = todayFor(profile?.timezone ?? 'UTC')
+  const checkin = await getTodayCheckin(userId, today)
+  const mood = checkin?.mood_score ?? null
+  const groups = await listTasksOrdered(userId, mood)
+  return ok({ ...groups, mood }, requestId)
 })
 
 const bodySchema = z

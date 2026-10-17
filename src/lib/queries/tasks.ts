@@ -1,6 +1,7 @@
 import type { Sql, TransactionSql } from 'postgres'
 import { sql } from '@/lib/db'
-import type { Difficulty, Task } from '@/types'
+import { orderTasks, type OrderedTasks } from '@/lib/ordering'
+import type { Difficulty, MoodScore, Task } from '@/types'
 
 type Db = Sql | TransactionSql
 
@@ -27,14 +28,17 @@ function toTask(row: TaskRow): Task {
   }
 }
 
-export async function listTasks(userId: string, tx: Db = sql): Promise<Task[]> {
+export async function listTasksOrdered(
+  userId: string,
+  mood: MoodScore | null,
+  tx: Db = sql,
+): Promise<OrderedTasks> {
   const rows = await tx<TaskRow[]>`
     select ${TASK_COLUMNS}
     from tasks
     where user_id = ${userId}
-    order by completed_at nulls first, created_at desc
   `
-  return rows.map(toTask)
+  return orderTasks(rows.map(toTask), mood)
 }
 
 export async function insertTask(
