@@ -15,7 +15,7 @@ import {
   DIFFICULTY_STEP,
   TASK_TITLE_MAX,
 } from '@/config/constants'
-import type { Difficulty, Task } from '@/types'
+import type { Difficulty, Task, TaskGroup } from '@/types'
 
 type MutationResponse = {
   task: Task
@@ -25,20 +25,23 @@ type MutationResponse = {
 
 type Props = {
   onAdded: (res: MutationResponse) => void
+  groups: TaskGroup[]
 }
 
-export function AddTaskForm({ onAdded }: Props) {
+export function AddTaskForm({ onAdded, groups }: Props) {
   const toast = useToast()
   const titleRef = useRef<HTMLInputElement>(null)
   const sliderId = useId()
   const sliderValueId = `${sliderId}-value`
   const sliderHintId = `${sliderId}-hint`
   const sliderErrorId = `${sliderId}-error`
+  const groupId = useId()
 
   const [title, setTitle] = useState('')
   const [difficulty, setDifficulty] = useState<number>(DIFFICULTY_DEFAULT)
   const [difficultyTouched, setDifficultyTouched] = useState(false)
   const [deadline, setDeadline] = useState('')
+  const [groupSelection, setGroupSelection] = useState<string>('')
   const [pending, setPending] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
@@ -47,6 +50,7 @@ export function AddTaskForm({ onAdded }: Props) {
     setDifficulty(DIFFICULTY_DEFAULT)
     setDifficultyTouched(false)
     setDeadline('')
+    setGroupSelection('')
     setFieldErrors({})
   }
 
@@ -68,6 +72,7 @@ export function AddTaskForm({ onAdded }: Props) {
       title: trimmedTitle,
       difficulty: (difficultyTouched ? difficulty : null) as Difficulty | null,
       deadline: deadline ? new Date(deadline).toISOString() : null,
+      groupId: groupSelection || null,
     }
 
     const res = await apiFetch<MutationResponse>('/api/tasks', {
@@ -194,6 +199,28 @@ export function AddTaskForm({ onAdded }: Props) {
           hint={copy.tasks.deadlineHint}
           error={fieldErrors.deadline ?? null}
         />
+
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor={groupId}
+            className="text-sm font-medium text-[var(--text)]"
+          >
+            {copy.tasks.groupLabel}
+          </label>
+          <select
+            id={groupId}
+            value={groupSelection}
+            onChange={(e) => setGroupSelection(e.target.value)}
+            className="w-full rounded-md border border-[var(--border)] bg-[var(--raised)] px-3 py-2 text-base text-[var(--text)]"
+          >
+            <option value="">{copy.tasks.groupNone}</option>
+            {groups.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.title}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div>
           <Button type="submit" pending={pending}>

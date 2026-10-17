@@ -2,7 +2,7 @@ export const copy = {
   app: { name: 'Pace', tagline: 'A job search that paces itself.' },
   landing: {
     description:
-      'Pace is a wellbeing companion for your job search: log how today feels, keep a short task list that reorders itself to match, and spend the points you earn colouring a page of your own.',
+      'Pace is a wellbeing companion for your job search: log how today feels, keep a short grouped task list, and spend the points you earn colouring a page of your own.',
   },
   auth: {
     signInTitle: 'Welcome back',
@@ -36,9 +36,8 @@ export const copy = {
     difficultyLabel: 'How hard does it feel to complete this? (1 is easiest, 10 is hardest)',
     difficultyUnrated: 'Not rated yet. Drag the slider to rate it.',
     difficultyHint: 'Rating a task once awards +5 points.',
-    deadlineLabel: 'Deadline (optional)',
+    deadlineLabel: 'Deadline',
     deadlineHint: 'Meeting your deadline earns more.',
-    laterDivider: 'When you have more in the tank',
     complete: 'Mark done',
     delete: 'Delete',
     completeLabel: 'Mark {title} done',
@@ -56,17 +55,22 @@ export const copy = {
     expandTitle: 'Show full title: {title}',
     collapseTitle: 'Collapse title: {title}',
     clearDifficultyAria: 'Clear difficulty',
-    moodNote: {
-      1: 'Ordered for a rough day. Gentlest first.',
-      2: 'Ordered for an okay day. Easiest first.',
-      3: 'Ordered for a good day. Meatier work first.',
-      4: 'Ordered for a great day. Hardest first.',
-    },
     titleRequired: 'Give the task a short name.',
     titleTooLong: 'Keep it under {max} characters.',
     difficultyPlaceholder: '—',
     metaSeparator: ' · ',
     completedLabel: 'Completed: {title}',
+    groupLabel: 'Group',
+    groupNone: '— None —',
+    groupSummary: '{total} tasks, {done} done',
+    groupSummaryOne: '1 task, {done} done',
+  },
+  groups: {
+    titleRequired: 'Give the group a short name.',
+    titleTooLong: 'Keep it under {max} characters.',
+    unknownGroup: 'That group is not yours.',
+    plannerLabel: 'Group name',
+    plannerHint: 'Edit the name the planner proposed.',
   },
   coloring: {
     heading: 'Your page',

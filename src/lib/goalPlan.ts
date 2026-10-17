@@ -10,6 +10,7 @@ import {
   GEMINI_MODEL,
   GEMINI_TIMEOUT_MS,
   MAX_GENERATED_TASKS,
+  TASK_GROUP_TITLE_MAX,
   TASK_TITLE_MAX,
 } from '@/config/constants'
 import type { Plan } from '@/types'
@@ -20,8 +21,9 @@ Do three jobs, in order:
 1. If the user's goal is vague, name which SMART attributes it is missing: specific, measurable, time-bound, relevant, assignable. Do not list all five if only one is missing.
 2. If the goal implies an unsustainable pace, say so in one plain sentence and propose the sustainable version. Most job seekers can only sustain two or three applications a day. "Apply to 30 jobs this week" is six per day; push back on that. Sustainability matters more than ambition here.
 3. Propose at most ${MAX_GENERATED_TASKS} concrete tasks. Each task is one specific action a person can finish in under an hour, with a difficulty from 1 (easy) to 10 (hard), and a dayOffset where 0 is today, 1 is tomorrow, up to ${DAY_OFFSET_MAX}.
+4. Give the whole plan a short group name — two to four words, title case, describing the theme (e.g. 'Shopify application prep', 'Python basics').
 
-Tone: plain, warm, never preachy. No exclamation marks. No "I" statements. If the input is not a goal at all (random letters, a question, a joke), return isSmart false, missing: ["specific"], sustainability: "", reframedGoal: a short note that this does not look like a goal, and tasks: [].
+Tone: plain, warm, never preachy. No exclamation marks. No "I" statements. If the input is not a goal at all (random letters, a question, a joke), return isSmart false, missing: ["specific"], sustainability: "", reframedGoal: a short note that this does not look like a goal, groupName: "Plan", and tasks: [].
 
 Output JSON that matches the response schema exactly.`
 
@@ -42,6 +44,10 @@ const planJsonSchema = {
       description: 'One sentence on whether the pace is survivable. Empty string if fine.',
     },
     reframedGoal: { type: 'string' },
+    groupName: {
+      type: 'string',
+      description: 'Two to four words, title case, describing the theme.',
+    },
     tasks: {
       type: 'array',
       items: {
@@ -61,7 +67,7 @@ const planJsonSchema = {
       },
     },
   },
-  required: ['isSmart', 'sustainability', 'reframedGoal', 'tasks'],
+  required: ['isSmart', 'sustainability', 'reframedGoal', 'groupName', 'tasks'],
 }
 
 const PlanResult = z.object({
@@ -69,6 +75,7 @@ const PlanResult = z.object({
   missing: z.array(z.string()).default([]),
   sustainability: z.string(),
   reframedGoal: z.string().trim().min(1),
+  groupName: z.string().trim().min(1).max(TASK_GROUP_TITLE_MAX),
   tasks: z
     .array(
       z.object({

@@ -13,6 +13,7 @@ import {
   DIFFICULTY_MAX,
   DIFFICULTY_MIN,
   GOAL_INPUT_MAX,
+  TASK_GROUP_TITLE_MAX,
   TASK_TITLE_MAX,
 } from '@/config/constants'
 import { X } from 'lucide-react'
@@ -35,6 +36,7 @@ function dayLabel(offset: number): string {
 export function GoalPlanner({ onAccepted }: Props) {
   const toast = useToast()
   const goalFieldId = useId()
+  const groupNameFieldId = useId()
 
   const [goal, setGoal] = useState('')
   const [goalError, setGoalError] = useState<string | null>(null)
@@ -42,12 +44,14 @@ export function GoalPlanner({ onAccepted }: Props) {
   const [accepting, setAccepting] = useState(false)
   const [plan, setPlan] = useState<Plan | null>(null)
   const [rows, setRows] = useState<Row[]>([])
+  const [groupName, setGroupName] = useState('')
   const [unavailable, setUnavailable] = useState(false)
   const [rateLimited, setRateLimited] = useState(false)
 
   function discard() {
     setPlan(null)
     setRows([])
+    setGroupName('')
   }
 
   async function onSubmit(e: SyntheticEvent<HTMLFormElement>) {
@@ -97,6 +101,7 @@ export function GoalPlanner({ onAccepted }: Props) {
     setRows(
       res.data.plan.tasks.map((t, i) => ({ ...t, key: `${Date.now()}-${i}` })),
     )
+    setGroupName(res.data.plan.groupName)
     announce(
       fill(copy.planner.announcedPlan, { n: res.data.plan.tasks.length }),
     )
@@ -122,6 +127,7 @@ export function GoalPlanner({ onAccepted }: Props) {
     if (!canAccept) return
     setAccepting(true)
     const payload = {
+      groupName: groupName.trim(),
       tasks: rows.map(({ title, difficulty, dayOffset }) => ({
         title: title.trim(),
         difficulty,
@@ -147,6 +153,7 @@ export function GoalPlanner({ onAccepted }: Props) {
     setGoal('')
     setPlan(null)
     setRows([])
+    setGroupName('')
   }
 
   if (unavailable || rateLimited) {
@@ -233,6 +240,25 @@ export function GoalPlanner({ onAccepted }: Props) {
 
         {rows.length > 0 ? (
           <section className="mt-4">
+            <div className="mb-4 flex flex-col gap-1.5">
+              <label
+                htmlFor={groupNameFieldId}
+                className="text-sm font-medium text-[var(--text)]"
+              >
+                {copy.groups.plannerLabel}
+              </label>
+              <input
+                id={groupNameFieldId}
+                type="text"
+                value={groupName}
+                maxLength={TASK_GROUP_TITLE_MAX}
+                onChange={(e) => setGroupName(e.target.value)}
+                className="w-full rounded-md border border-[var(--border)] bg-[var(--raised)] px-3 py-2 text-base text-[var(--text)]"
+              />
+              <p className="text-sm text-[var(--muted)]">
+                {copy.groups.plannerHint}
+              </p>
+            </div>
             <h3
               className="font-semibold text-[var(--text)]"
               style={{

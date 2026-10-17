@@ -21,6 +21,9 @@ export const DIFFICULTY_LIGHT_MAX = 3
 export const DIFFICULTY_HEAVY_MIN = 7
 
 export const TASK_TITLE_MAX = 140
+export const TASK_GROUP_TITLE_MAX = 80
+/** Default fallback title when the planner proposes a blank group name. */
+export const TASK_GROUP_DEFAULT_TITLE = 'Plan'
 export const SECTION_ID_MAX = 64
 
 export const GEMINI_MODEL = 'gemini-3.5-flash-lite'

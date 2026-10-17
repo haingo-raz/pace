@@ -10,6 +10,16 @@ export type Task = {
   completed_at: string | null
   points_earned: number
   created_at: string
+  group_id: string | null
+  position: number
+}
+
+export type TaskGroup = {
+  id: string
+  user_id: string
+  title: string
+  position: number
+  created_at: string
 }
 
 export type Profile = {
@@ -60,6 +70,7 @@ export type Plan = {
   missing: string[]
   sustainability: string
   reframedGoal: string
+  groupName: string
   tasks: ProposedTask[]
 }
 

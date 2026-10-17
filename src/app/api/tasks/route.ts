@@ -1,11 +1,9 @@
 import { z } from 'zod'
-import { ok, withRoute } from '@/lib/api'
+import { ApiError, ok, withRoute } from '@/lib/api'
 import { requireUser } from '@/lib/auth'
 import { sql } from '@/lib/db'
-import { listTasksOrdered, insertTask } from '@/lib/queries/tasks'
-import { getProfile } from '@/lib/queries/profile'
-import { getTodayCheckin } from '@/lib/queries/checkins'
-import { todayFor } from '@/lib/queries/day'
+import { insertTask, listTasks } from '@/lib/queries/tasks'
+import { groupBelongsToUser, listGroups } from '@/lib/queries/taskGroups'
 import { awardPointsTx } from '@/lib/points'
 import { logger } from '@/lib/logger'
 import {
@@ -20,12 +18,11 @@ import type { Difficulty } from '@/types'
 
 export const GET = withRoute('GET /api/tasks', async (_req, _ctx, requestId) => {
   const userId = await requireUser()
-  const profile = await getProfile(userId)
-  const today = todayFor(profile?.timezone ?? 'UTC')
-  const checkin = await getTodayCheckin(userId, today)
-  const mood = checkin?.mood_score ?? null
-  const groups = await listTasksOrdered(userId, mood)
-  return ok({ ...groups, mood }, requestId)
+  const [groups, tasks] = await Promise.all([
+    listGroups(userId),
+    listTasks(userId),
+  ])
+  return ok({ groups, tasks }, requestId)
 })
 
 const bodySchema = z
@@ -42,13 +39,25 @@ const bodySchema = z
       .max(DIFFICULTY_MAX)
       .nullable(),
     deadline: z.string().datetime().nullable(),
+    groupId: z.string().uuid().nullable().default(null),
   })
   .strict()
 
 export const POST = withRoute('POST /api/tasks', async (req, _ctx, requestId) => {
   const userId = await requireUser()
   const raw: unknown = await req.json().catch(() => ({}))
-  const { title, difficulty, deadline } = bodySchema.parse(raw)
+  const { title, difficulty, deadline, groupId } = bodySchema.parse(raw)
+
+  if (groupId !== null) {
+    const owned = await groupBelongsToUser(userId, groupId)
+    if (!owned) {
+      throw new ApiError(
+        'VALIDATION_ERROR',
+        copy.errors.VALIDATION_ERROR,
+        { fields: { groupId: copy.groups.unknownGroup } },
+      )
+    }
+  }
 
   const result = await sql.begin(async (tx) => {
     const task = await insertTask(
@@ -56,6 +65,7 @@ export const POST = withRoute('POST /api/tasks', async (req, _ctx, requestId) =>
       title,
       difficulty as Difficulty | null,
       deadline,
+      groupId,
       tx,
     )
     if (difficulty !== null) {

@@ -4,7 +4,8 @@ import { DashboardShell } from './DashboardShell'
 import { requireUser } from '@/lib/auth'
 import { runDailyVisit } from '@/lib/dailyVisit'
 import { getTodayCheckin } from '@/lib/queries/checkins'
-import { listTasksOrdered } from '@/lib/queries/tasks'
+import { listTasks } from '@/lib/queries/tasks'
+import { listGroups } from '@/lib/queries/taskGroups'
 import { todayFor } from '@/lib/queries/day'
 import { getTodayTotals } from '@/lib/queries/insights'
 import { loadInsight } from '@/lib/insightLoader'
@@ -18,8 +19,9 @@ export default async function DashboardPage() {
   const today = todayFor(profile.timezone)
   const todayCheckin = await getTodayCheckin(userId, today)
   const mood = todayCheckin?.mood_score ?? null
-  const [groups, insightPayload, todayTotals] = await Promise.all([
-    listTasksOrdered(userId, mood),
+  const [groups, tasks, insightPayload, todayTotals] = await Promise.all([
+    listGroups(userId),
+    listTasks(userId),
     loadInsight(
       userId,
       profile.timezone,
@@ -40,7 +42,7 @@ export default async function DashboardPage() {
         pointsToday={todayTotals.pointsToday}
         tasksDoneToday={todayTotals.tasksDoneToday}
         initialGroups={groups}
-        initialMood={mood}
+        initialTasks={tasks}
         insight={insightPayload.insight}
         insightSentence={insightPayload.sentence}
         streakAtRisk={streakGraceUsed}

@@ -17,8 +17,7 @@ import { announce } from '@/lib/announce'
 import { apiFetch } from '@/lib/http'
 import { POINTS_DELTA_MS } from '@/config/constants'
 import { copy } from '@/content/en'
-import type { OrderedTasks } from '@/lib/ordering'
-import type { CheckinResponse, MoodScore } from '@/types'
+import type { CheckinResponse, MoodScore, Task, TaskGroup } from '@/types'
 
 type Props = {
   pointsTotal: number
@@ -27,14 +26,14 @@ type Props = {
   todayMood: MoodScore | null
   pointsToday: number
   tasksDoneToday: number
-  initialGroups: OrderedTasks
-  initialMood: MoodScore | null
+  initialGroups: TaskGroup[]
+  initialTasks: Task[]
   insight: Insight
   insightSentence: string
   streakAtRisk: boolean
 }
 
-type GroupsResponse = OrderedTasks & { mood: MoodScore | null }
+type TasksResponse = { groups: TaskGroup[]; tasks: Task[] }
 
 export function DashboardShell({
   pointsTotal,
@@ -44,7 +43,7 @@ export function DashboardShell({
   pointsToday,
   tasksDoneToday,
   initialGroups,
-  initialMood,
+  initialTasks,
   insight,
   insightSentence,
   streakAtRisk,
@@ -52,8 +51,8 @@ export function DashboardShell({
   const router = useRouter()
   const [delta, setDelta] = useState<number | null>(null)
   const [hasCheckedIn, setHasCheckedIn] = useState(initialChecked)
-  const [groups, setGroups] = useState<OrderedTasks>(initialGroups)
-  const [mood, setMood] = useState<MoodScore | null>(initialMood)
+  const [groups, setGroups] = useState<TaskGroup[]>(initialGroups)
+  const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const [refreshFailed, setRefreshFailed] = useState(false)
   const [tab, setTab] = useState<'manual' | 'plan'>('manual')
   const deltaTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -75,19 +74,15 @@ export function DashboardShell({
 
   const refresh = useCallback(async () => {
     const seq = ++refreshSeq.current
-    const res = await apiFetch<GroupsResponse>('/api/tasks')
+    const res = await apiFetch<TasksResponse>('/api/tasks')
     if (seq !== refreshSeq.current) return
     if (!res.ok) {
       setRefreshFailed(true)
       return
     }
     setRefreshFailed(false)
-    setGroups({
-      primary: res.data.primary,
-      later: res.data.later,
-      completed: res.data.completed,
-    })
-    setMood(res.data.mood)
+    setGroups(res.data.groups)
+    setTasks(res.data.tasks)
   }, [])
 
   function onCheckedIn(res: CheckinResponse | null) {
@@ -217,6 +212,7 @@ export function DashboardShell({
             hidden={tab !== 'manual'}
           >
             <AddTaskForm
+              groups={groups}
               onAdded={(res) => {
                 announce(copy.tasks.announcedAdded)
                 bumpPoints(res.pointsAwarded)
@@ -240,7 +236,7 @@ export function DashboardShell({
           </div>
           <TaskList
             groups={groups}
-            mood={mood}
+            tasks={tasks}
             onCompleted={(m) => {
               bumpPoints(m.pointsAwarded)
               void refresh()

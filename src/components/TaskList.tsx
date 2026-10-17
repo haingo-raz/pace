@@ -1,13 +1,12 @@
 'use client'
 
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { Card } from '@/components/ui/Card'
 import { useToast } from '@/components/ui/Toast'
 import { apiFetch } from '@/lib/http'
 import { announce } from '@/lib/announce'
 import { copy, fill } from '@/content/en'
-import type { OrderedTasks } from '@/lib/ordering'
-import type { MoodScore, Task } from '@/types'
+import type { Task, TaskGroup } from '@/types'
 import { Check, Trash2 } from 'lucide-react'
 
 type Mutation = {
@@ -16,8 +15,8 @@ type Mutation = {
 }
 
 type Props = {
-  groups: OrderedTasks
-  mood: MoodScore | null
+  groups: TaskGroup[]
+  tasks: Task[]
   onCompleted: (m: Mutation) => void
   onDeleted: (id: string) => void
 }
@@ -26,7 +25,29 @@ function stableDay(iso: string): string {
   return iso.slice(0, 10)
 }
 
-export function TaskList({ groups, mood, onCompleted, onDeleted }: Props) {
+type Section = { group: TaskGroup | null; tasks: Task[] }
+
+function partition(groups: TaskGroup[], tasks: Task[]): Section[] {
+  const byGroup = new Map<string, Task[]>()
+  const ungrouped: Task[] = []
+  for (const t of tasks) {
+    if (t.group_id === null) {
+      ungrouped.push(t)
+    } else {
+      const list = byGroup.get(t.group_id) ?? []
+      list.push(t)
+      byGroup.set(t.group_id, list)
+    }
+  }
+  const sections: Section[] = []
+  if (ungrouped.length > 0) sections.push({ group: null, tasks: ungrouped })
+  for (const g of groups) {
+    sections.push({ group: g, tasks: byGroup.get(g.id) ?? [] })
+  }
+  return sections
+}
+
+export function TaskList({ groups, tasks, onCompleted, onDeleted }: Props) {
   const toast = useToast()
   const [busyId, setBusyId] = useState<string | null>(null)
 
@@ -36,18 +57,17 @@ export function TaskList({ groups, mood, onCompleted, onDeleted }: Props) {
     () => false,
   )
   const headingRef = useRef<HTMLHeadingElement>(null)
-  const totalCount =
-    groups.primary.length + groups.later.length + groups.completed.length
-  const prevCount = useRef(totalCount)
+  const prevCount = useRef(tasks.length)
 
   useEffect(() => {
-    if (totalCount < prevCount.current && headingRef.current) {
+    if (tasks.length < prevCount.current && headingRef.current) {
       headingRef.current.focus()
     }
-    prevCount.current = totalCount
-  }, [totalCount])
+    prevCount.current = tasks.length
+  }, [tasks.length])
 
-  const isEmpty = totalCount === 0
+  const sections = useMemo(() => partition(groups, tasks), [groups, tasks])
+  const isEmpty = tasks.length === 0 && groups.length === 0
 
   async function complete(task: Task) {
     if (busyId) return
@@ -117,36 +137,57 @@ export function TaskList({ groups, mood, onCompleted, onDeleted }: Props) {
       >
         {copy.tasks.heading}
       </h3>
-      {mood !== null ? (
-        <p className="text-sm text-[var(--muted)]">{copy.tasks.moodNote[mood]}</p>
-      ) : null}
       {isEmpty ? (
         <Card>
           <p className="text-sm text-[var(--muted)]">{copy.tasks.empty}</p>
         </Card>
       ) : (
-        <>
-          {groups.primary.length > 0 ? (
-            <ul className="flex flex-col gap-2">
-              {groups.primary.map(renderItem)}
-            </ul>
-          ) : null}
-          {groups.later.length > 0 ? (
-            <>
-              <p className="mt-2 text-sm text-[var(--muted)]">
-                {copy.tasks.laterDivider}
-              </p>
-              <ul className="flex flex-col gap-2">
-                {groups.later.map(renderItem)}
-              </ul>
-            </>
-          ) : null}
-          {groups.completed.length > 0 ? (
-            <ul className="flex flex-col gap-2">
-              {groups.completed.map(renderItem)}
-            </ul>
-          ) : null}
-        </>
+        <div className="flex flex-col gap-3">
+          {sections.map((section) => {
+            if (section.group === null) {
+              return (
+                <ul key="ungrouped" className="flex flex-col gap-2">
+                  {section.tasks.map(renderItem)}
+                </ul>
+              )
+            }
+            const g = section.group
+            const total = section.tasks.length
+            const done = section.tasks.filter(
+              (t) => t.completed_at !== null,
+            ).length
+            const summary =
+              total === 1
+                ? fill(copy.tasks.groupSummaryOne, { done })
+                : fill(copy.tasks.groupSummary, { total, done })
+            return (
+              <section
+                key={g.id}
+                aria-labelledby={`group-${g.id}`}
+                className="mt-2 flex flex-col gap-2"
+              >
+                <div>
+                  <h3
+                    id={`group-${g.id}`}
+                    className="font-semibold text-[var(--text)]"
+                    style={{
+                      fontFamily: 'var(--font-fraunces)',
+                      fontSize: 'clamp(1rem, 2vw, 1.15rem)',
+                    }}
+                  >
+                    {g.title}
+                  </h3>
+                  <p className="text-xs text-[var(--muted)]">{summary}</p>
+                </div>
+                {section.tasks.length > 0 ? (
+                  <ul className="flex flex-col gap-2">
+                    {section.tasks.map(renderItem)}
+                  </ul>
+                ) : null}
+              </section>
+            )
+          })}
+        </div>
       )}
     </>
   )

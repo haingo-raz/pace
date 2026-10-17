@@ -4,6 +4,7 @@ import { requireUser } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { getProfile } from '@/lib/queries/profile'
 import { insertTask } from '@/lib/queries/tasks'
+import { insertGroup } from '@/lib/queries/taskGroups'
 import {
   DAY_OFFSET_MAX,
   DEADLINE_END_OF_DAY_HOUR,
@@ -11,9 +12,11 @@ import {
   DIFFICULTY_MAX,
   DIFFICULTY_MIN,
   MAX_GENERATED_TASKS,
+  TASK_GROUP_DEFAULT_TITLE,
+  TASK_GROUP_TITLE_MAX,
   TASK_TITLE_MAX,
 } from '@/config/constants'
-import type { Difficulty, Task } from '@/types'
+import type { Difficulty, Task, TaskGroup } from '@/types'
 
 const taskSchema = z
   .object({
@@ -25,6 +28,7 @@ const taskSchema = z
 
 const bodySchema = z
   .object({
+    groupName: z.string().trim().max(TASK_GROUP_TITLE_MAX),
     tasks: z.array(taskSchema).min(1).max(MAX_GENERATED_TASKS),
   })
   .strict()
@@ -51,10 +55,6 @@ function utcOffsetMinutes(timezone: string, instant: Date): number {
   return sign * (hours * 60 + minutes)
 }
 
-/**
- * The instant where the local wall-clock in `timezone` reads
- * end-of-day on today+dayOffset. "Day N" means a whole local calendar day.
- */
 function deadlineFor(timezone: string, dayOffset: number, now: Date): Date {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: timezone,
@@ -80,13 +80,15 @@ export const POST = withRoute(
   async (req, _ctx, requestId) => {
     const userId = await requireUser()
     const raw: unknown = await req.json().catch(() => ({}))
-    const { tasks } = bodySchema.parse(raw)
+    const { groupName, tasks } = bodySchema.parse(raw)
 
     const profile = await getProfile(userId)
     const timezone = profile?.timezone ?? 'UTC'
     const now = new Date()
+    const title = groupName.trim() || TASK_GROUP_DEFAULT_TITLE
 
-    const inserted = await sql.begin(async (tx) => {
+    const result = await sql.begin(async (tx) => {
+      const group: TaskGroup = await insertGroup(userId, title, tx)
       const rows: Task[] = []
       for (const t of tasks) {
         const deadline = deadlineFor(timezone, t.dayOffset, now).toISOString()
@@ -95,13 +97,14 @@ export const POST = withRoute(
           t.title,
           t.difficulty as Difficulty,
           deadline,
+          group.id,
           tx,
         )
         rows.push(row)
       }
-      return rows
+      return { group, tasks: rows }
     })
 
-    return ok({ tasks: inserted }, requestId)
+    return ok(result, requestId)
   },
 )

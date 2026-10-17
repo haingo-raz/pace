@@ -1,12 +1,12 @@
 import type { Sql, TransactionSql } from 'postgres'
 import { sql } from '@/lib/db'
-import { orderTasks, type OrderedTasks } from '@/lib/ordering'
-import type { Difficulty, MoodScore, Task } from '@/types'
+import type { Difficulty, Task } from '@/types'
 
 type Db = Sql | TransactionSql
 
 const TASK_COLUMNS = sql`
-  id, user_id, title, difficulty, deadline, completed_at, points_earned, created_at
+  id, user_id, title, difficulty, deadline, completed_at, points_earned,
+  created_at, group_id, position
 `
 
 type TaskRow = Omit<Task, 'deadline' | 'completed_at' | 'created_at'> & {
@@ -28,17 +28,23 @@ function toTask(row: TaskRow): Task {
   }
 }
 
-export async function listTasksOrdered(
+/**
+ * Ungrouped tasks sort first (null treated as the lowest key via a sentinel),
+ * then each group's tasks by position.
+ */
+const UNGROUPED_SENTINEL = '00000000-0000-0000-0000-000000000000'
+
+export async function listTasks(
   userId: string,
-  mood: MoodScore | null,
   tx: Db = sql,
-): Promise<OrderedTasks> {
+): Promise<Task[]> {
   const rows = await tx<TaskRow[]>`
     select ${TASK_COLUMNS}
     from tasks
     where user_id = ${userId}
+    order by coalesce(group_id, ${UNGROUPED_SENTINEL}::uuid), position
   `
-  return orderTasks(rows.map(toTask), mood)
+  return rows.map(toTask)
 }
 
 export async function insertTask(
@@ -46,11 +52,26 @@ export async function insertTask(
   title: string,
   difficulty: Difficulty | null,
   deadline: string | null,
+  groupId: string | null = null,
   tx: Db = sql,
 ): Promise<Task> {
   const [row] = await tx<TaskRow[]>`
-    insert into tasks (user_id, title, difficulty, deadline)
-    values (${userId}, ${title}, ${difficulty}, ${deadline})
+    insert into tasks (user_id, title, difficulty, deadline, group_id, position)
+    values (
+      ${userId},
+      ${title},
+      ${difficulty},
+      ${deadline},
+      ${groupId},
+      coalesce(
+        (
+          select max(position) + 1000 from tasks
+          where user_id = ${userId}
+            and group_id is not distinct from ${groupId}
+        ),
+        1000
+      )
+    )
     returning ${TASK_COLUMNS}
   `
   return toTask(row)
@@ -119,4 +140,12 @@ export async function deleteTask(
     returning id
   `
   return !!row
+}
+
+export async function updateTaskPosition(): Promise<Task | null> {
+  return null
+}
+
+export async function moveTaskToGroup(): Promise<Task | null> {
+  return null
 }
