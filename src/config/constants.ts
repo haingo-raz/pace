@@ -20,6 +20,13 @@ export const DIFFICULTY_HEAVY_MIN = 7
 
 export const TASK_TITLE_MAX = 140
 
+/** Default IANA timezone until the user picks one. */
+export const DEFAULT_TIMEZONE = 'America/Toronto'
+/** How long the "+N" points animation stays mounted, in milliseconds. */
+export const POINTS_DELTA_MS = 1200
+/** Delay before writing to the live region so screen readers see the change. */
+export const ANNOUNCER_DELAY_MS = 20
+
 /** Closed set of ledger reasons; mirrors docs/SCHEMA.sql. */
 export const POINT_REASONS = {
   DAILY_VISIT: 'daily_visit',

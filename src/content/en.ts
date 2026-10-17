@@ -14,13 +14,13 @@ export const copy = {
     signOut: 'Sign out',
     toggleToSignUp: 'New here? Create an account',
     toggleToSignIn: 'Already have an account? Sign in',
-    signedInAs: 'Signed in as',
   },
   checkin: {
     question: 'How are you today?',
     moods: { 1: 'Rough', 2: 'Okay', 3: 'Good', 4: 'Great' },
     skip: 'Skip for now',
     done: 'Logged for today',
+    announced: 'Logged. You earned {points} points.',
   },
   tasks: {
     heading: 'Today',
@@ -47,9 +47,8 @@ export const copy = {
     coloring: 'Colour',
   },
   dashboard: {
-    pointsLabel: 'Points',
-    visitAwarded: 'Welcome back - logged today’s visit.',
-    visitAlready: 'Today’s visit already logged.',
+    pointsLabel: 'pts',
+    streakLabel: 'Streak',
   },
   errors: {
     generic: 'Something went wrong. Try again.',

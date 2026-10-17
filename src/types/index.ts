@@ -44,6 +44,11 @@ export type ColoringPage = {
   total_sections: number
 }
 
+export type CheckinResponse = {
+  pointsAwarded: number
+  pointsTotal: number
+}
+
 export type UserDrawing = {
   id: string
   user_id: string

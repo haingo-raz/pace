@@ -1,10 +1,14 @@
-import { HTMLAttributes } from 'react'
+import { forwardRef, HTMLAttributes } from 'react'
 
 type Props = HTMLAttributes<HTMLDivElement>
 
-export function Card({ className = '', style, ...rest }: Props) {
+export const Card = forwardRef<HTMLDivElement, Props>(function Card(
+  { className = '', style, ...rest },
+  ref,
+) {
   return (
     <div
+      ref={ref}
       className={`bg-[var(--surface)] border border-[var(--border)] p-6 ${className}`}
       style={{
         borderRadius: 'var(--radius)',
@@ -14,4 +18,4 @@ export function Card({ className = '', style, ...rest }: Props) {
       {...rest}
     />
   )
-}
+})

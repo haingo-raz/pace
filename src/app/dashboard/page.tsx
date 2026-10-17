@@ -1,64 +1,27 @@
 import { connection } from 'next/server'
 import { AppShell } from '@/components/ui/AppShell'
-import { SignOutButton } from './SignOutButton'
+import { DashboardShell } from './DashboardShell'
 import { requireUser } from '@/lib/auth'
 import { runDailyVisit } from '@/lib/dailyVisit'
-import { copy } from '@/content/en'
+import { getTodayCheckin } from '@/lib/queries/checkins'
+import { todayFor } from '@/lib/queries/day'
 
 export const instant = false
 
 export default async function DashboardPage() {
   await connection()
   const userId = await requireUser()
-  const { profile, visitAwarded } = await runDailyVisit(userId)
+  const { profile } = await runDailyVisit(userId)
+  const today = todayFor(profile.timezone)
+  const todayCheckin = await getTodayCheckin(userId, today)
 
   return (
     <AppShell>
-      <h1
-        className="font-semibold text-[var(--text)]"
-        style={{
-          fontFamily: 'var(--font-fraunces)',
-          fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
-          textWrap: 'balance',
-        }}
-      >
-        {copy.app.name}
-      </h1>
-
-      <div className="mt-6 flex items-baseline gap-3">
-        <span className="text-sm uppercase tracking-widest text-[var(--muted)]">
-          {copy.dashboard.pointsLabel}
-        </span>
-        <span
-          className="text-4xl font-bold text-[var(--text)]"
-          style={{
-            fontFamily: 'var(--font-jetbrains)',
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
-          {profile.points_total}
-        </span>
-      </div>
-
-      <p className="mt-2 text-sm text-[var(--muted)]">
-        {visitAwarded
-          ? copy.dashboard.visitAwarded
-          : copy.dashboard.visitAlready}
-      </p>
-
-      <p className="mt-6 text-[var(--muted)] text-sm">
-        {copy.auth.signedInAs}{' '}
-        <span
-          className="text-[var(--text)]"
-          style={{ fontFamily: 'var(--font-jetbrains)' }}
-        >
-          {userId}
-        </span>
-      </p>
-
-      <div className="mt-8">
-        <SignOutButton />
-      </div>
+      <DashboardShell
+        pointsTotal={profile.points_total}
+        streakCount={profile.streak_count}
+        hasCheckedIn={!!todayCheckin}
+      />
     </AppShell>
   )
 }
