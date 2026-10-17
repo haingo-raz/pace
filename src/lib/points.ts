@@ -1,7 +1,5 @@
 import type { TransactionSql } from 'postgres'
-import { sql } from '@/lib/db'
 import { ApiError } from '@/lib/api'
-import { logger } from '@/lib/logger'
 import type { PointReason } from '@/config/constants'
 
 /**
@@ -25,17 +23,6 @@ export async function awardPointsTx(
     returning points_total
   `
   return p.points_total
-}
-
-/** Standalone single-transaction award with its own log line. */
-export async function awardPoints(
-  userId: string,
-  amount: number,
-  reason: PointReason,
-): Promise<number> {
-  const total = await sql.begin((tx) => awardPointsTx(tx, userId, amount, reason))
-  logger.info({ event: 'points_award', userId, amount, reason, total })
-  return total
 }
 
 /**
@@ -71,20 +58,4 @@ export async function spendPointsTx(
     }
     throw e
   }
-}
-
-/**
- * Standalone spend with its own transaction and log line. See spendPointsTx
- * for the CHECK-constraint translation.
- */
-export async function spendPoints(
-  userId: string,
-  amount: number,
-  reason: PointReason,
-): Promise<number> {
-  const total = await sql.begin((tx) =>
-    spendPointsTx(tx, userId, amount, reason),
-  )
-  logger.info({ event: 'points_spend', userId, amount: -amount, reason, total })
-  return total
 }
