@@ -62,11 +62,20 @@ export const copy = {
   },
   coloring: {
     heading: 'Your page',
-    costNote: 'Each section costs {cost} points',
+    costNote: 'Each section costs {cost} points.',
     cantAfford: 'You need {cost} points to fill a section.',
     filled: 'filled with {colour}',
     empty: 'not filled yet',
     progress: '{done} of {total} sections filled',
+    pickerLabel: 'Choose a colour',
+    announced:
+      'Section {position} filled with {colour}. {points} points remaining.',
+    announcedCompleteSuffix: 'Page complete.',
+    completeTitle: 'Your page is complete.',
+    completeNote: 'A new page is coming later.',
+    loadFailed: 'Could not load your page.',
+    retry: 'Try again',
+    sectionAria: 'Section {position} of {total}, {status}',
   },
   nav: {
     label: 'Primary',
