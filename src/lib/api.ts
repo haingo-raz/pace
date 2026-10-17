@@ -83,11 +83,16 @@ export function withRoute<Ctx>(name: string, handler: Handler<Ctx>) {
           code: 'VALIDATION_ERROR',
           ms,
         })
+        const fields: Record<string, string> = {}
+        for (const issue of e.issues) {
+          const key = issue.path.map(String).join('.')
+          if (key && !fields[key]) fields[key] = issue.message
+        }
         return errorResponse(
           'VALIDATION_ERROR',
           'Please check the highlighted fields.',
           requestId,
-          { issues: e.issues },
+          { fields, issues: e.issues },
         )
       }
       if (e instanceof ApiError) {

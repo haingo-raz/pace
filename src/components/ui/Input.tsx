@@ -1,6 +1,7 @@
 'use client'
 
 import { InputHTMLAttributes, forwardRef, useId } from 'react'
+import { copy } from '@/content/en'
 
 type Props = InputHTMLAttributes<HTMLInputElement> & {
   label: string
@@ -9,7 +10,7 @@ type Props = InputHTMLAttributes<HTMLInputElement> & {
 }
 
 export const Input = forwardRef<HTMLInputElement, Props>(function Input(
-  { label, error, hint, id, className = '', ...rest },
+  { label, error, hint, id, className = '', required, ...rest },
   ref,
 ) {
   const auto = useId()
@@ -25,16 +26,27 @@ export const Input = forwardRef<HTMLInputElement, Props>(function Input(
     <div className="flex flex-col gap-1.5">
       <label htmlFor={inputId} className="text-sm font-medium text-[var(--text)]">
         {label}
+        {required ? (
+          <>
+            {' '}
+            <span
+              aria-label={copy.tasks.requiredAria}
+              className="text-[var(--primary-strong)]"
+            >
+              {copy.tasks.requiredIndicator}
+            </span>
+          </>
+        ) : null}
       </label>
       <input
         ref={ref}
         id={inputId}
+        required={required}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
         className={
-          'w-full rounded-md border px-3 py-2 bg-[var(--raised)] text-[var(--text)] ' +
-          'border-[var(--border)] text-base ' +
-          (error ? 'border-[var(--danger)] ' : '') +
+          'w-full rounded-md border px-3 py-2 bg-[var(--raised)] text-[var(--text)] text-base ' +
+          (error ? 'border-[var(--danger)] ' : 'border-[var(--border)] ') +
           className
         }
         {...rest}

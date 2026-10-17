@@ -13,6 +13,8 @@ export const COST_COLOR_SECTION = 2
 
 export const DIFFICULTY_MIN = 1
 export const DIFFICULTY_MAX = 10
+export const DIFFICULTY_DEFAULT = 5
+export const DIFFICULTY_STEP = 1
 /** At or below this is light work. */
 export const DIFFICULTY_LIGHT_MAX = 3
 /** At or above this is heavy work. */

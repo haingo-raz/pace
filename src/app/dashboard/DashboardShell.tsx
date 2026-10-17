@@ -4,25 +4,31 @@ import { useEffect, useRef, useState } from 'react'
 import { Card } from '@/components/ui/Card'
 import { PointsBadge } from '@/components/PointsBadge'
 import { MoodCheckIn } from '@/components/MoodCheckIn'
+import { AddTaskForm } from '@/components/AddTaskForm'
+import { TaskList } from '@/components/TaskList'
 import { SignOutButton } from './SignOutButton'
+import { announce } from '@/lib/announce'
 import { POINTS_DELTA_MS } from '@/config/constants'
 import { copy } from '@/content/en'
-import type { CheckinResponse } from '@/types'
+import type { CheckinResponse, Task } from '@/types'
 
 type Props = {
   pointsTotal: number
   streakCount: number
   hasCheckedIn: boolean
+  initialTasks: Task[]
 }
 
 export function DashboardShell({
   pointsTotal: initialPoints,
   streakCount,
   hasCheckedIn: initialChecked,
+  initialTasks,
 }: Props) {
   const [points, setPoints] = useState(initialPoints)
   const [delta, setDelta] = useState<number | null>(null)
   const [hasCheckedIn, setHasCheckedIn] = useState(initialChecked)
+  const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const loggedRef = useRef<HTMLDivElement>(null)
   const shouldFocusLogged = useRef(false)
   const deltaTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -40,13 +46,16 @@ export function DashboardShell({
     }
   }, [])
 
+  function bumpPoints(pointsAwarded: number, pointsTotal: number | null) {
+    if (pointsAwarded <= 0 || pointsTotal === null) return
+    setPoints(pointsTotal)
+    setDelta(pointsAwarded)
+    if (deltaTimer.current) clearTimeout(deltaTimer.current)
+    deltaTimer.current = setTimeout(() => setDelta(null), POINTS_DELTA_MS)
+  }
+
   function onCheckedIn(res: CheckinResponse | null) {
-    if (res && res.pointsAwarded > 0) {
-      setPoints(res.pointsTotal)
-      setDelta(res.pointsAwarded)
-      if (deltaTimer.current) clearTimeout(deltaTimer.current)
-      deltaTimer.current = setTimeout(() => setDelta(null), POINTS_DELTA_MS)
-    }
+    if (res) bumpPoints(res.pointsAwarded, res.pointsTotal)
     shouldFocusLogged.current = true
     setHasCheckedIn(true)
   }
@@ -97,20 +106,34 @@ export function DashboardShell({
       </section>
 
       <section className="mt-6">
-        <Card>
-          <h2
-            className="font-semibold text-[var(--text)]"
-            style={{
-              fontFamily: 'var(--font-fraunces)',
-              fontSize: 'clamp(1.2rem, 2.5vw, 1.5rem)',
+        <h2
+          className="font-semibold text-[var(--text)]"
+          style={{
+            fontFamily: 'var(--font-fraunces)',
+            fontSize: 'clamp(1.2rem, 2.5vw, 1.5rem)',
+          }}
+        >
+          {copy.tasks.heading}
+        </h2>
+        <div className="mt-4 flex flex-col gap-4">
+          <AddTaskForm
+            onAdded={(res) => {
+              setTasks((prev) => [res.task, ...prev])
+              announce(copy.tasks.announcedAdded)
+              bumpPoints(res.pointsAwarded, res.pointsTotal)
             }}
-          >
-            {copy.tasks.heading}
-          </h2>
-          <p className="mt-2 text-sm text-[var(--muted)]">
-            {copy.tasks.empty}
-          </p>
-        </Card>
+          />
+          <TaskList
+            tasks={tasks}
+            onCompleted={(updated, m) => {
+              setTasks((prev) =>
+                prev.map((t) => (t.id === updated.id ? updated : t)),
+              )
+              bumpPoints(m.pointsAwarded, m.pointsTotal)
+            }}
+            onDeleted={(id) => setTasks((prev) => prev.filter((t) => t.id !== id))}
+          />
+        </div>
       </section>
 
       <div className="mt-10">
