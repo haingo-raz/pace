@@ -9,7 +9,7 @@ import {
 import { copy, fill } from '@/content/en'
 import type { InsightKind } from '@/lib/insights'
 
-export function writtenSentence(
+function writtenSentence(
   kind: InsightKind,
   numbers: Record<string, number>,
 ): string {
