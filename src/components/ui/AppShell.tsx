@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BarChart2, Home, Palette } from 'lucide-react'
+import { BarChart2, Home, Palette, Settings } from 'lucide-react'
 import { copy } from '@/content/en'
 
 type NavItem = { href: string; label: string; Icon: typeof Home }
@@ -11,6 +11,7 @@ const NAV: NavItem[] = [
   { href: '/dashboard', label: copy.nav.home, Icon: Home },
   { href: '/stats', label: copy.nav.stats, Icon: BarChart2 },
   { href: '/coloring', label: copy.nav.coloring, Icon: Palette },
+  { href: '/settings', label: copy.nav.settings, Icon: Settings },
 ]
 
 export function AppShell({ children }: { children: React.ReactNode }) {

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/Button'
+import { LogOut } from 'lucide-react'
 import { useToast } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
 import { copy } from '@/content/en'
@@ -27,8 +27,15 @@ export function SignOutButton() {
   }
 
   return (
-    <Button variant="secondary" onClick={onClick} pending={pending}>
-{copy.auth.signOut}
-    </Button>
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={pending}
+      aria-label={copy.settings.signOutIconLabel}
+      aria-busy={pending || undefined}
+      className="flex h-11 w-11 items-center justify-center rounded-md text-[var(--muted)] hover:text-[var(--text)] disabled:opacity-60"
+    >
+      <LogOut aria-hidden="true" className="h-5 w-5" />
+    </button>
   )
 }

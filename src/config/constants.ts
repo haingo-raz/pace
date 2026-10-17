@@ -49,6 +49,9 @@ export const STATS_DAYS_DEFAULT = 14
 export const STATS_MIN_DATA_DAYS = 3
 export const MAX_GENERATED_TASKS = 7
 export const GOAL_PLAN_MAX_PER_HOUR = 10
+/** Account change-email attempts per user per hour. */
+export const CHANGE_EMAIL_MAX_PER_HOUR = 5
+export const CHANGE_EMAIL_WINDOW_MS = 60 * 60 * 1000
 /** A missed day of streak within this window keeps the streak alive. */
 export const STREAK_GRACE_DAYS = 2
 
