@@ -11,8 +11,10 @@ export const copy = {
     passwordLabel: 'Password',
     signIn: 'Sign in',
     signUp: 'Create account',
+    signOut: 'Sign out',
     toggleToSignUp: 'New here? Create an account',
     toggleToSignIn: 'Already have an account? Sign in',
+    signedInAs: 'Signed in as',
   },
   checkin: {
     question: 'How are you today?',
