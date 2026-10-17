@@ -1,26 +1,97 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  --bg:             #FAF7F2;
+  --surface:        #F2EDE4;
+  --raised:         #FFFFFF;
+  --border:         #E2D9CB;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --primary:        #E8845A;
+  --primary-strong: #B8512A;
+  --secondary:      #6BAE8F;
+  --accent:         #F2C46D;
+  --danger:         #B3261E;
+
+  --text:           #2C2416;
+  --muted:          #6F6050;
+  --muted-soft:     #8C7B6B;
+
+  --radius: 12px;
+  --shadow: 0 1px 2px rgb(44 36 22 / .05), 0 4px 16px rgb(44 36 22 / .06);
+
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg:             #1C1814;
+    --surface:        #272219;
+    --raised:         #322B21;
+    --border:         #413828;
+
+    --primary:        #E8845A;
+    --primary-strong: #F0A183;
+    --secondary:      #6BAE8F;
+    --accent:         #F2C46D;
+    --danger:         #F2B8B5;
+
+    --text:           #F5EFE6;
+    --muted:          #B8A692;
+    --muted-soft:     #A09080;
+
+    color-scheme: dark;
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-danger: var(--danger);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-muted-soft: var(--muted-soft);
+  --radius-card: var(--radius);
+  --shadow-card: var(--shadow);
+  --font-serif: var(--font-fraunces);
+  --font-sans: var(--font-jakarta);
+  --font-mono: var(--font-jetbrains);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary-strong);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
