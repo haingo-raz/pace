@@ -46,6 +46,11 @@ export const copy = {
     home: 'Home',
     coloring: 'Colour',
   },
+  dashboard: {
+    pointsLabel: 'Points',
+    visitAwarded: 'Welcome back - logged today’s visit.',
+    visitAlready: 'Today’s visit already logged.',
+  },
   errors: {
     generic: 'Something went wrong. Try again.',
     NETWORK: 'Could not reach Pace. Check your connection.',
