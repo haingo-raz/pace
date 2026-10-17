@@ -7,7 +7,9 @@ import { PointsBadge } from '@/components/PointsBadge'
 import { MoodCheckIn } from '@/components/MoodCheckIn'
 import { AddTaskForm } from '@/components/AddTaskForm'
 import { GoalPlanner } from '@/components/GoalPlanner'
+import { InsightCard } from '@/components/InsightCard'
 import { TaskList } from '@/components/TaskList'
+import type { Insight } from '@/lib/insights'
 import { SignOutButton } from './SignOutButton'
 import { announce } from '@/lib/announce'
 import { apiFetch } from '@/lib/http'
@@ -22,6 +24,9 @@ type Props = {
   hasCheckedIn: boolean
   initialGroups: OrderedTasks
   initialMood: MoodScore | null
+  insight: Insight
+  insightSentence: string
+  streakAtRisk: boolean
 }
 
 type GroupsResponse = OrderedTasks & { mood: MoodScore | null }
@@ -32,6 +37,9 @@ export function DashboardShell({
   hasCheckedIn: initialChecked,
   initialGroups,
   initialMood,
+  insight,
+  insightSentence,
+  streakAtRisk,
 }: Props) {
   const [points, setPoints] = useState(initialPoints)
   const [delta, setDelta] = useState<number | null>(null)
@@ -119,6 +127,14 @@ export function DashboardShell({
           </span>
         </div>
       </header>
+
+      <section className="mt-6">
+        <InsightCard
+          insight={insight}
+          sentence={insightSentence}
+          streakAtRisk={streakAtRisk}
+        />
+      </section>
 
       <section className="mt-6">
         {hasCheckedIn ? (

@@ -123,6 +123,42 @@ export const copy = {
       'You have asked for a few plans in a row. Try again in a bit, or add tasks manually.',
     isSmart: 'This looks specific enough to act on.',
   },
+  insight: {
+    heading: 'How you have been',
+    moodSparkLabel: 'Mood over {days} days',
+    effortSparkLabel: 'Effort over {days} days',
+    lateSparkLabel: 'Late-night activity over {days} days',
+    moodSummary: '{label}: now {value} of {max}',
+    moodSummaryEmpty: '{label}: no entry yet',
+    totalSummary: '{label}: {sum} in {days} days',
+    sparkRange: '{min} to {max}',
+    sparkTrendUp: 'Trending up',
+    sparkTrendDown: 'Trending down',
+    sparkTrendFlat: 'About level',
+    dismissAria: 'This insight does not match how I feel',
+    dismiss: 'This does not feel right',
+    dismissed: 'Thanks. Hidden for today.',
+    streakAtRisk:
+      'Your streak is in a grace window. Miss another day and it resets.',
+    kind: {
+      GRINDING:
+        'You have shown up {streak} days running, and the last week has felt rougher than the one before.',
+      SUSTAINED_LOW:
+        'Three or more days at Rough or Okay in a row. Rest counts, even when it feels like nothing.',
+      EFFORT_CLIMBING:
+        'You are doing more than last week, and feeling it less. One lighter task tomorrow is still progress.',
+      DEADLINES_SLIP:
+        '{deadlinesMissed} deadlines slipped by in the last two weeks. Pacing changes before plans do.',
+      NOT_RECOVERING:
+        'You have earned {pointsLast7} points this week and spent none. Rest is part of the loop.',
+      LATE_NIGHTS:
+        'The last week has been a lot of late nights. An earlier stop tomorrow helps the day after.',
+      RECOVERING:
+        'Mood is coming back up without easing off. Good run.',
+      STEADY: '',
+      NEED_MORE_DATA: '',
+    },
+  },
   errors: {
     generic: 'Something went wrong. Try again.',
     NETWORK: 'Could not reach Pace. Check your connection.',

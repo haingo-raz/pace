@@ -25,8 +25,41 @@ export const SECTION_ID_MAX = 64
 
 export const GEMINI_MODEL = 'gemini-3.5-flash-lite'
 export const GEMINI_TIMEOUT_MS = 12_000
+/** Short timeout for the insight-phrasing call so a slow Gemini doesn't block first paint. */
+export const GEMINI_PHRASE_TIMEOUT_MS = 1_500
+export const MS_PER_DAY = 86_400_000
+/** Rounding factor for one decimal place. */
+export const ONE_DECIMAL = 10
+/** Mood scale endpoints — mirrors MoodScore. */
+export const MOOD_MIN = 1
+export const MOOD_MAX = 4
+/** Max daily effort shown on the sparkline. */
+export const INSIGHT_EFFORT_SPARK_MAX = 20
+/** Max daily late-event count shown on the sparkline. */
+export const INSIGHT_LATE_SPARK_MAX = 6
 export const MAX_GENERATED_TASKS = 7
 export const GOAL_PLAN_MAX_PER_HOUR = 10
+/** A missed day of streak within this window keeps the streak alive. */
+export const STREAK_GRACE_DAYS = 2
+
+/** Insights detection — window and thresholds. */
+export const INSIGHT_WINDOW_DAYS = 14
+export const INSIGHT_HALF_WINDOW_DAYS = 7
+export const INSIGHT_MIN_CHECKINS = 5
+export const INSIGHT_GRIND_STREAK_MIN = 5
+export const INSIGHT_GRIND_MOOD_DROP = 0.5
+export const INSIGHT_LOW_MOOD_MAX = 2
+export const INSIGHT_LOW_CONSEC_DAYS = 3
+export const INSIGHT_EFFORT_RATIO = 1.25
+export const INSIGHT_DEADLINES_MISSED_MIN = 3
+export const INSIGHT_NOT_RECOVERING_POINTS = 40
+export const INSIGHT_LATE_RATIO = 2
+export const INSIGHT_LATE_MIN = 3
+/** When a task has no difficulty, treat it as this when summing effort. */
+export const INSIGHT_UNRATED_EFFORT = 5
+/** Local hours that count as a "late night" point-event. 23:00–03:59 inclusive. */
+export const INSIGHT_LATE_HOUR_START = 23
+export const INSIGHT_LATE_HOUR_END = 4
 /** Window the rate limiter counts over. */
 export const GOAL_PLAN_WINDOW_MS = 60 * 60 * 1000
 export const GOAL_INPUT_MAX = 300
