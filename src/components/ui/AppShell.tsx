@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { BarChart2, Home, Palette, Settings } from 'lucide-react'
 import { copy } from '@/content/en'
+import { BrandMark } from '@/components/BrandMark'
 
 type NavItem = { href: string; label: string; Icon: typeof Home }
 
@@ -25,8 +26,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         aria-label={copy.nav.label}
         className="hidden md:flex md:flex-col md:w-56 md:border-r md:border-[var(--border)] md:bg-[var(--surface)] md:px-4 md:py-6 md:gap-2"
       >
-        <div className="font-serif text-xl font-semibold mb-4 px-2" style={{ fontFamily: 'var(--font-fraunces)' }}>
-          {copy.app.name}
+        <div className="mb-4 px-2">
+          <BrandMark size="lg" />
         </div>
         {NAV.map(({ href, label, Icon }) => {
           const active = isActive(href)

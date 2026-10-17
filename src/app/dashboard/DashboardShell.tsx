@@ -11,13 +11,17 @@ import { AddTaskForm } from '@/components/AddTaskForm'
 import { GoalPlanner } from '@/components/GoalPlanner'
 import { InsightCard } from '@/components/InsightCard'
 import { TaskList } from '@/components/TaskList'
+import { BrandMark } from '@/components/BrandMark'
+import { ThemeToggle } from '@/components/ThemeToggle'
+import { StarGlyph } from '@/components/StarGlyph'
 import type { Insight } from '@/lib/insights'
 import { SignOutButton } from './SignOutButton'
 import { announce } from '@/lib/announce'
 import { apiFetch } from '@/lib/http'
 import { POINTS_DELTA_MS } from '@/config/constants'
-import { copy } from '@/content/en'
+import { copy, fill } from '@/content/en'
 import type { CheckinResponse, MoodScore, Task, TaskGroup } from '@/types'
+import { Zap } from 'lucide-react'
 
 type Props = {
   pointsTotal: number
@@ -55,6 +59,27 @@ export function DashboardShell({
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const [refreshFailed, setRefreshFailed] = useState(false)
   const [tab, setTab] = useState<'manual' | 'plan'>('manual')
+  const tabRefs = useRef<Record<'plan' | 'manual', HTMLButtonElement | null>>({
+    plan: null,
+    manual: null,
+  })
+
+  function onTabKey(e: React.KeyboardEvent) {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault()
+      const next = tab === 'plan' ? 'manual' : 'plan'
+      setTab(next)
+      tabRefs.current[next]?.focus()
+    } else if (e.key === 'Home') {
+      e.preventDefault()
+      setTab('plan')
+      tabRefs.current.plan?.focus()
+    } else if (e.key === 'End') {
+      e.preventDefault()
+      setTab('manual')
+      tabRefs.current.manual?.focus()
+    }
+  }
   const deltaTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const refreshSeq = useRef(0)
 
@@ -94,31 +119,31 @@ export function DashboardShell({
 
   return (
     <>
-      <header className="flex items-center justify-between gap-4">
-        <h1
-          className="font-semibold text-[var(--text)]"
-          style={{
-            fontFamily: 'var(--font-fraunces)',
-            fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
-            textWrap: 'balance',
-          }}
-        >
-          {copy.app.name}
-        </h1>
-        <div className="flex items-center gap-3">
+      <header className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="md:hidden">
+          <BrandMark size="lg" />
+        </div>
+        <div className="hidden md:block flex-1" aria-hidden="true" />
+        <div className="flex items-center gap-2">
           <PointsBadge total={pointsTotal} delta={delta} />
           <span
-            className="text-sm text-[var(--muted)]"
+            aria-label={fill(copy.dashboard.streakAria, { n: streakCount })}
+            className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--accent)]/20 px-3 min-h-11 text-sm text-[var(--text)]"
             style={{ fontVariantNumeric: 'tabular-nums' }}
           >
-            {copy.dashboard.streakLabel}{' '}
+            <Zap
+              aria-hidden="true"
+              className="h-4 w-4 text-[var(--primary-strong)]"
+              fill="currentColor"
+            />
             <span
-              className="text-[var(--text)] font-semibold"
+              className="font-semibold"
               style={{ fontFamily: 'var(--font-jetbrains)' }}
             >
               {streakCount}
             </span>
           </span>
+          <ThemeToggle />
         </div>
       </header>
 
@@ -170,39 +195,56 @@ export function DashboardShell({
           <div
             role="tablist"
             aria-label={copy.tasks.heading}
-            className="flex flex-wrap gap-2 border-b border-[var(--border)]"
+            onKeyDown={onTabKey}
+            className="flex gap-1 -mb-px"
           >
             <button
-              type="button"
-              role="tab"
-              aria-selected={tab === 'manual'}
-              aria-controls="task-panel-manual"
-              id="task-tab-manual"
-              onClick={() => setTab('manual')}
-              className={
-                'min-h-11 px-4 text-sm font-medium border-b-2 -mb-px ' +
-                (tab === 'manual'
-                  ? 'border-[var(--primary-strong)] text-[var(--text)]'
-                  : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]')
-              }
-            >
-              {copy.planner.tabManual}
-            </button>
-            <button
+              ref={(el) => {
+                tabRefs.current.plan = el
+              }}
               type="button"
               role="tab"
               aria-selected={tab === 'plan'}
               aria-controls="task-panel-plan"
               id="task-tab-plan"
+              tabIndex={tab === 'plan' ? 0 : -1}
               onClick={() => setTab('plan')}
               className={
-                'min-h-11 px-4 text-sm font-medium border-b-2 -mb-px ' +
+                'flex-1 md:flex-none min-h-11 px-4 text-sm font-medium inline-flex items-center justify-center gap-2 border border-b-0 rounded-t-[var(--radius)] ' +
                 (tab === 'plan'
-                  ? 'border-[var(--primary-strong)] text-[var(--text)]'
-                  : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]')
+                  ? 'bg-[var(--raised)] border-[var(--primary-strong)] text-[var(--text)]'
+                  : 'bg-[var(--surface)] border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)]')
               }
             >
+              <StarGlyph
+                className={
+                  'h-4 w-4 ' +
+                  (tab === 'plan'
+                    ? 'text-[var(--primary-strong)]'
+                    : 'text-[var(--muted-soft)]')
+                }
+              />
               {copy.planner.tabPlan}
+            </button>
+            <button
+              ref={(el) => {
+                tabRefs.current.manual = el
+              }}
+              type="button"
+              role="tab"
+              aria-selected={tab === 'manual'}
+              aria-controls="task-panel-manual"
+              id="task-tab-manual"
+              tabIndex={tab === 'manual' ? 0 : -1}
+              onClick={() => setTab('manual')}
+              className={
+                'flex-1 md:flex-none min-h-11 px-4 text-sm font-medium inline-flex items-center justify-center border border-b-0 rounded-t-[var(--radius)] ' +
+                (tab === 'manual'
+                  ? 'bg-[var(--raised)] border-[var(--primary-strong)] text-[var(--text)]'
+                  : 'bg-[var(--surface)] border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)]')
+              }
+            >
+              {copy.planner.tabManual}
             </button>
           </div>
           <div

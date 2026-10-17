@@ -1,5 +1,21 @@
 export const copy = {
-  app: { name: 'Pace', tagline: 'A job search that paces itself.' },
+  app: {
+    name: 'Pace',
+    tagline: 'A job search that paces itself.',
+    brandMarkLabel: 'Pace mark',
+  },
+  theme: {
+    switchTo: {
+      system: 'Match system theme',
+      light: 'Switch to light mode',
+      dark: 'Switch to dark mode',
+    },
+  },
+  dashboard: {
+    pointsLabel: 'pts',
+    streakLabel: 'Streak',
+    streakAria: '{n} day streak',
+  } as { pointsLabel: string; streakLabel: string; streakAria: string },
   landing: {
     description:
       'Pace is a wellbeing companion for your job search: log how today feels, keep a short grouped task list, and spend the points you earn colouring a page of your own.',
@@ -173,10 +189,6 @@ export const copy = {
       'A few more days of check-ins and the charts will have shape. Come back after another day or two.',
     loadFailed: 'Could not load your stats.',
     retry: 'Try again',
-  },
-  dashboard: {
-    pointsLabel: 'pts',
-    streakLabel: 'Streak',
   },
   planner: {
     tabManual: 'Add a task',
