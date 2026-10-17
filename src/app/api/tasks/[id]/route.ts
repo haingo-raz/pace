@@ -5,8 +5,11 @@ import { sql } from '@/lib/db'
 import {
   completeTask,
   deleteTask,
+  editTask,
   rateTask,
+  uncompleteTask,
 } from '@/lib/queries/tasks'
+import { groupBelongsToUser } from '@/lib/queries/taskGroups'
 import { awardPointsTx } from '@/lib/points'
 import { logger } from '@/lib/logger'
 import {
@@ -16,19 +19,42 @@ import {
   POINTS_TASK_COMPLETE,
   POINTS_TASK_ON_TIME,
   POINT_REASONS,
+  TASK_TITLE_MAX,
 } from '@/config/constants'
+import { copy, fill } from '@/content/en'
+import type { TaskEdit } from '@/lib/queries/tasks'
 import type { Difficulty } from '@/types'
 
-const patchSchema = z
-  .discriminatedUnion('action', [
-    z.object({ action: z.literal('complete') }).strict(),
-    z
-      .object({
-        action: z.literal('rate'),
-        difficulty: z.number().int().min(DIFFICULTY_MIN).max(DIFFICULTY_MAX),
-      })
-      .strict(),
-  ])
+const patchSchema = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('complete') }).strict(),
+  z.object({ action: z.literal('uncomplete') }).strict(),
+  z
+    .object({
+      action: z.literal('rate'),
+      difficulty: z.number().int().min(DIFFICULTY_MIN).max(DIFFICULTY_MAX),
+    })
+    .strict(),
+  z
+    .object({
+      action: z.literal('edit'),
+      title: z
+        .string()
+        .trim()
+        .min(1, copy.tasks.titleRequired)
+        .max(TASK_TITLE_MAX, fill(copy.tasks.titleTooLong, { max: TASK_TITLE_MAX }))
+        .optional(),
+      difficulty: z
+        .number()
+        .int()
+        .min(DIFFICULTY_MIN)
+        .max(DIFFICULTY_MAX)
+        .nullable()
+        .optional(),
+      deadline: z.string().datetime().nullable().optional(),
+      groupId: z.string().uuid().nullable().optional(),
+    })
+    .strict(),
+])
 
 type Params = { id: string }
 
@@ -41,6 +67,35 @@ export const PATCH = withRoute<{ params: Promise<Params> }>(
     const { id: taskId } = paramsSchema.parse(await ctx.params)
     const raw: unknown = await req.json().catch(() => ({}))
     const parsed = patchSchema.parse(raw)
+
+    if (parsed.action === 'edit') {
+      if (parsed.groupId) {
+        const owned = await groupBelongsToUser(userId, parsed.groupId)
+        if (!owned) {
+          throw new ApiError(
+            'VALIDATION_ERROR',
+            copy.errors.VALIDATION_ERROR,
+            { fields: { groupId: copy.groups.unknownGroup } },
+          )
+        }
+      }
+      const patch: TaskEdit = {}
+      if (parsed.title !== undefined) patch.title = parsed.title
+      if (parsed.difficulty !== undefined) {
+        patch.difficulty = parsed.difficulty as Difficulty | null
+      }
+      if (parsed.deadline !== undefined) patch.deadline = parsed.deadline
+      if (parsed.groupId !== undefined) patch.groupId = parsed.groupId
+      const task = await editTask(userId, taskId, patch)
+      if (!task) throw new ApiError('NOT_FOUND', 'Task not found.')
+      return ok({ task }, requestId)
+    }
+
+    if (parsed.action === 'uncomplete') {
+      const task = await uncompleteTask(userId, taskId)
+      if (!task) throw new ApiError('NOT_FOUND', 'Task not found.')
+      return ok({ task }, requestId)
+    }
 
     const result = await sql.begin(async (tx) => {
       if (parsed.action === 'complete') {

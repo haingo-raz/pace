@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { Card } from '@/components/ui/Card'
+import { Menu, type MenuItem } from '@/components/ui/Menu'
 import { useToast } from '@/components/ui/Toast'
 import { apiFetch } from '@/lib/http'
 import { announce } from '@/lib/announce'
 import { copy, fill } from '@/content/en'
 import type { Task, TaskGroup } from '@/types'
-import { Check, Trash2 } from 'lucide-react'
+import { Check, MoreHorizontal } from 'lucide-react'
+import { TaskEditForm } from '@/components/TaskEditForm'
 
 type Mutation = {
   pointsAwarded: number
@@ -19,6 +21,7 @@ type Props = {
   tasks: Task[]
   onCompleted: (m: Mutation) => void
   onDeleted: (id: string) => void
+  onChanged: () => void
 }
 
 function stableDay(iso: string): string {
@@ -47,9 +50,16 @@ function partition(groups: TaskGroup[], tasks: Task[]): Section[] {
   return sections
 }
 
-export function TaskList({ groups, tasks, onCompleted, onDeleted }: Props) {
+export function TaskList({
+  groups,
+  tasks,
+  onCompleted,
+  onDeleted,
+  onChanged,
+}: Props) {
   const toast = useToast()
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   const mounted = useSyncExternalStore(
     () => () => {},
@@ -97,6 +107,26 @@ export function TaskList({ groups, tasks, onCompleted, onDeleted }: Props) {
     })
   }
 
+  async function uncomplete(task: Task) {
+    if (busyId) return
+    setBusyId(task.id)
+    const res = await apiFetch<{ task: Task }>(`/api/tasks/${task.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ action: 'uncomplete' }),
+    })
+    setBusyId(null)
+    if (!res.ok) {
+      const msg =
+        (copy.errors as Record<string, string | undefined>)[res.error.code] ??
+        copy.errors.generic
+      toast.error(msg)
+      return
+    }
+    announce(copy.tasks.announcedUncompleted)
+    toast.success(copy.tasks.announcedUncompleted)
+    onChanged()
+  }
+
   async function remove(task: Task) {
     if (busyId) return
     setBusyId(task.id)
@@ -116,6 +146,21 @@ export function TaskList({ groups, tasks, onCompleted, onDeleted }: Props) {
   }
 
   function renderItem(t: Task) {
+    if (editingId === t.id) {
+      return (
+        <li key={t.id}>
+          <TaskEditForm
+            task={t}
+            groups={groups}
+            onSaved={() => {
+              setEditingId(null)
+              onChanged()
+            }}
+            onCancel={() => setEditingId(null)}
+          />
+        </li>
+      )
+    }
     return (
       <TaskRow
         key={t.id}
@@ -123,7 +168,9 @@ export function TaskList({ groups, tasks, onCompleted, onDeleted }: Props) {
         mounted={mounted}
         busyHere={busyId === t.id}
         onComplete={() => complete(t)}
-        onRemove={() => remove(t)}
+        onEdit={() => setEditingId(t.id)}
+        onToggleComplete={() => (t.completed_at ? uncomplete(t) : complete(t))}
+        onDelete={() => remove(t)}
       />
     )
   }
@@ -198,13 +245,17 @@ function TaskRow({
   mounted,
   busyHere,
   onComplete,
-  onRemove,
+  onEdit,
+  onToggleComplete,
+  onDelete,
 }: {
   task: Task
   mounted: boolean
   busyHere: boolean
   onComplete: () => void
-  onRemove: () => void
+  onEdit: () => void
+  onToggleComplete: () => void
+  onDelete: () => void
 }) {
   const [expanded, setExpanded] = useState(false)
   const done = !!task.completed_at
@@ -219,6 +270,15 @@ function TaskRow({
   const titleAria = expanded
     ? fill(copy.tasks.collapseTitle, { title: task.title })
     : fill(copy.tasks.expandTitle, { title: task.title })
+
+  const items: MenuItem[] = [
+    { label: copy.tasks.edit, onClick: onEdit },
+    {
+      label: done ? copy.tasks.markIncomplete : copy.tasks.markComplete,
+      onClick: onToggleComplete,
+    },
+    { label: copy.tasks.delete, destructive: true, onClick: onDelete },
+  ]
 
   return (
     <li>
@@ -287,15 +347,15 @@ function TaskRow({
             </div>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onRemove}
-          disabled={busyHere}
-          aria-label={fill(copy.tasks.deleteLabel, { title: task.title })}
-          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md text-[var(--muted)] hover:text-[var(--danger)]"
+        <Menu
+          label={copy.tasks.menuAria}
+          items={items}
+          triggerLabel={fill(copy.tasks.menuLabel, { title: task.title })}
+          triggerDisabled={busyHere}
+          triggerClassName="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md text-[var(--muted)] hover:text-[var(--text)]"
         >
-          <Trash2 aria-hidden="true" className="h-5 w-5" />
-        </button>
+          <MoreHorizontal aria-hidden="true" className="h-5 w-5" />
+        </Menu>
       </Card>
     </li>
   )

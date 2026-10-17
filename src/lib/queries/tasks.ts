@@ -129,6 +129,72 @@ export async function rateTask(
   return row ? { task: toTask(row), firstRating: false } : null
 }
 
+export type TaskEdit = {
+  title?: string
+  difficulty?: Difficulty | null
+  deadline?: string | null
+  groupId?: string | null
+}
+
+/**
+ * Partial edit. Only present keys change. Points are never touched here.
+ * When groupId changes, position is recomputed to the bottom of the destination.
+ */
+export async function editTask(
+  userId: string,
+  taskId: string,
+  patch: TaskEdit,
+  tx: Db = sql,
+): Promise<Task | null> {
+  const [current] = await tx<{ group_id: string | null }[]>`
+    select group_id from tasks
+    where id = ${taskId} and user_id = ${userId}
+  `
+  if (!current) return null
+
+  const groupChanges =
+    patch.groupId !== undefined && patch.groupId !== current.group_id
+  const nextGroupId = groupChanges
+    ? patch.groupId ?? null
+    : current.group_id
+
+  const [row] = await tx<TaskRow[]>`
+    update tasks set
+      title      = coalesce(${patch.title ?? null}, title),
+      difficulty = case when ${patch.difficulty !== undefined}::boolean
+                        then ${patch.difficulty ?? null}::int else difficulty end,
+      deadline   = case when ${patch.deadline !== undefined}::boolean
+                        then ${patch.deadline ?? null}::timestamptz else deadline end,
+      group_id   = case when ${patch.groupId !== undefined}::boolean
+                        then ${patch.groupId ?? null}::uuid else group_id end,
+      position   = case when ${groupChanges}::boolean
+                        then coalesce(
+                          (select max(position) + 1000 from tasks
+                           where user_id = ${userId}
+                             and group_id is not distinct from ${nextGroupId}
+                             and id <> ${taskId}),
+                          1000)
+                        else position end
+    where id = ${taskId} and user_id = ${userId}
+    returning ${TASK_COLUMNS}
+  `
+  return row ? toTask(row) : null
+}
+
+export async function uncompleteTask(
+  userId: string,
+  taskId: string,
+  tx: Db = sql,
+): Promise<Task | null> {
+  const [row] = await tx<TaskRow[]>`
+    update tasks
+    set completed_at = null
+    where id = ${taskId} and user_id = ${userId}
+    returning ${TASK_COLUMNS}
+  `
+  return row ? toTask(row) : null
+}
+
 export async function deleteTask(
   userId: string,
   taskId: string,

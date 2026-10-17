@@ -244,6 +244,10 @@ export function DashboardShell({
             onDeleted={() => {
               void refresh()
             }}
+            onChanged={() => {
+              router.refresh()
+              void refresh()
+            }}
           />
         </div>
       </section>
