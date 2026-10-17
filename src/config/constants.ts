@@ -23,6 +23,19 @@ export const DIFFICULTY_HEAVY_MIN = 7
 export const TASK_TITLE_MAX = 140
 export const SECTION_ID_MAX = 64
 
+export const GEMINI_MODEL = 'gemini-3.5-flash-lite'
+export const GEMINI_TIMEOUT_MS = 12_000
+export const MAX_GENERATED_TASKS = 7
+export const GOAL_PLAN_MAX_PER_HOUR = 10
+/** Window the rate limiter counts over. */
+export const GOAL_PLAN_WINDOW_MS = 60 * 60 * 1000
+export const GOAL_INPUT_MAX = 300
+/** Day offsets are 0 (today) through DAY_OFFSET_MAX. */
+export const DAY_OFFSET_MAX = 13
+/** End-of-day deadline, in the user's timezone. */
+export const DEADLINE_END_OF_DAY_HOUR = 23
+export const DEADLINE_END_OF_DAY_MINUTE = 59
+
 /** Default IANA timezone until the user picks one. */
 export const DEFAULT_TIMEZONE = 'America/Toronto'
 /** How long the "+N" points animation stays mounted, in milliseconds. */

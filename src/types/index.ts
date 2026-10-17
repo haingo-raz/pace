@@ -49,6 +49,20 @@ export type CheckinResponse = {
   pointsTotal: number
 }
 
+export type ProposedTask = {
+  title: string
+  difficulty: number
+  dayOffset: number
+}
+
+export type Plan = {
+  isSmart: boolean
+  missing: string[]
+  sustainability: string
+  reframedGoal: string
+  tasks: ProposedTask[]
+}
+
 export type UserDrawing = {
   id: string
   user_id: string

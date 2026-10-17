@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { PointsBadge } from '@/components/PointsBadge'
 import { MoodCheckIn } from '@/components/MoodCheckIn'
 import { AddTaskForm } from '@/components/AddTaskForm'
+import { GoalPlanner } from '@/components/GoalPlanner'
 import { TaskList } from '@/components/TaskList'
 import { SignOutButton } from './SignOutButton'
 import { announce } from '@/lib/announce'
@@ -38,6 +39,7 @@ export function DashboardShell({
   const [groups, setGroups] = useState<OrderedTasks>(initialGroups)
   const [mood, setMood] = useState<MoodScore | null>(initialMood)
   const [refreshFailed, setRefreshFailed] = useState(false)
+  const [tab, setTab] = useState<'manual' | 'plan'>('manual')
   const loggedRef = useRef<HTMLDivElement>(null)
   const shouldFocusLogged = useRef(false)
   const deltaTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -157,13 +159,71 @@ export function DashboardShell({
               </Button>
             </Card>
           ) : null}
-          <AddTaskForm
-            onAdded={(res) => {
-              announce(copy.tasks.announcedAdded)
-              bumpPoints(res.pointsAwarded, res.pointsTotal)
-              void refresh()
-            }}
-          />
+          <div
+            role="tablist"
+            aria-label={copy.tasks.heading}
+            className="flex flex-wrap gap-2 border-b border-[var(--border)]"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'manual'}
+              aria-controls="task-panel-manual"
+              id="task-tab-manual"
+              onClick={() => setTab('manual')}
+              className={
+                'min-h-11 px-4 text-sm font-medium border-b-2 -mb-px ' +
+                (tab === 'manual'
+                  ? 'border-[var(--primary-strong)] text-[var(--text)]'
+                  : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]')
+              }
+            >
+              {copy.planner.tabManual}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'plan'}
+              aria-controls="task-panel-plan"
+              id="task-tab-plan"
+              onClick={() => setTab('plan')}
+              className={
+                'min-h-11 px-4 text-sm font-medium border-b-2 -mb-px ' +
+                (tab === 'plan'
+                  ? 'border-[var(--primary-strong)] text-[var(--text)]'
+                  : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]')
+              }
+            >
+              {copy.planner.tabPlan}
+            </button>
+          </div>
+          <div
+            role="tabpanel"
+            id="task-panel-manual"
+            aria-labelledby="task-tab-manual"
+            hidden={tab !== 'manual'}
+          >
+            <AddTaskForm
+              onAdded={(res) => {
+                announce(copy.tasks.announcedAdded)
+                bumpPoints(res.pointsAwarded, res.pointsTotal)
+                void refresh()
+              }}
+            />
+          </div>
+          <div
+            role="tabpanel"
+            id="task-panel-plan"
+            aria-labelledby="task-tab-plan"
+            hidden={tab !== 'plan'}
+          >
+            <GoalPlanner
+              onAccepted={() => {
+                setTab('manual')
+                void refresh()
+              }}
+            />
+          </div>
           <TaskList
             groups={groups}
             mood={mood}
