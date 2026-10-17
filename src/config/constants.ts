@@ -37,6 +37,13 @@ export const MOOD_MAX = 4
 export const INSIGHT_EFFORT_SPARK_MAX = 20
 /** Max daily late-event count shown on the sparkline. */
 export const INSIGHT_LATE_SPARK_MAX = 6
+
+/** Stats page range bounds. */
+export const STATS_DAYS_MIN = 7
+export const STATS_DAYS_MAX = 30
+export const STATS_DAYS_DEFAULT = 14
+/** Below this many check-ins the stats page shows the empty-state line. */
+export const STATS_MIN_DATA_DAYS = 3
 export const MAX_GENERATED_TASKS = 7
 export const GOAL_PLAN_MAX_PER_HOUR = 10
 /** A missed day of streak within this window keeps the streak alive. */
