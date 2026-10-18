@@ -134,7 +134,6 @@ export function TodayCard({
           >
             {fill(copy.checkin.todayStats, {
               points: pointsToday,
-              tasks: tasksDoneToday,
             })}
           </p>
         </div>

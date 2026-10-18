@@ -50,7 +50,7 @@ export const copy = {
     todayPrefix: 'Today:',
     todayMood: 'Today: {mood}',
     change: 'Feeling different? Change it.',
-    todayStats: '{points} points today, {tasks} tasks done',
+    todayStats: '{points} points today',
     changeAnnounced: 'Mood updated to {mood}.',
     changeFailed: 'Could not update your mood.',
   },

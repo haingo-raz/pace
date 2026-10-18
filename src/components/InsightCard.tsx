@@ -11,6 +11,7 @@ import {
   MOOD_MAX,
   MOOD_MIN,
 } from '@/config/constants'
+import { StarGlyph } from './StarGlyph'
 
 type Props = {
   insight: Insight
@@ -78,7 +79,13 @@ export function InsightCard({ insight, sentence, streakAtRisk }: Props) {
         </h2>
       </header>
 
-      <p className="mt-2 text-[var(--text)]">{sentence}</p>
+      <p className="mt-2 flex items-start gap-2 text-[var(--text)]">
+        <StarGlyph
+          className="mt-1 h-4 w-4 shrink-0 text-[var(--primary-strong)]"
+          aria-hidden="true"
+        />
+        <span>{sentence}</span>
+      </p>
 
       <div className="mt-4 grid grid-cols-2 gap-4">
         <SparkCell series={insight.evidence.primary} />
