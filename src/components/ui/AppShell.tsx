@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation'
 import { BarChart2, Home, Palette, Settings } from 'lucide-react'
 import { copy } from '@/content/en'
 import { BrandMark } from '@/components/BrandMark'
+import { AssistantBubble } from '@/components/AssistantBubble'
+import { Footer } from '@/components/Footer'
 
 type NavItem = { href: string; label: string; Icon: typeof Home }
 
@@ -59,6 +61,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto w-full max-w-[72rem] px-4 py-6 md:py-10">
           {children}
         </div>
+        <Footer />
       </main>
 
       <nav
@@ -86,6 +89,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )
         })}
       </nav>
+
+      <AssistantBubble />
     </div>
   )
 }

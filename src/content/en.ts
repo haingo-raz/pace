@@ -154,7 +154,8 @@ export const copy = {
       'Section {position} filled with {colour}. {points} points remaining.',
     announcedCompleteSuffix: 'Page complete.',
     completeTitle: 'Your page is complete.',
-    completeNote: 'A new page is coming later.',
+    completeNote:
+      'Congrats on this milestone! Keep this warm because you can share it to others in the community in an upcoming update!',
     loadFailed: 'Could not load your page.',
     retry: 'Try again',
     sectionAria: 'Section {position} of {total}, {status}',
@@ -163,7 +164,7 @@ export const copy = {
   nav: {
     label: 'Primary',
     home: 'Home',
-    coloring: 'Colour',
+    coloring: 'Redeem',
     stats: 'Stats',
     settings: 'Settings',
   },
@@ -197,6 +198,41 @@ export const copy = {
     streakResume: 'Resume streak',
     streakPausedDone: 'Streak paused. Your count is frozen.',
     streakResumedDone: 'Streak resumed from your frozen count.',
+    faqHeading: 'Frequently asked',
+    faq: [
+      {
+        q: 'What is Pace?',
+        a: 'Pace is a wellbeing companion for your job search. You log a daily mood, keep a short task list that gently reorders itself based on that mood, earn points for showing up, and spend those points to colour a page of your own. Pace watches the last two weeks and surfaces a quiet, honest note when a pattern worth seeing shows up.',
+      },
+      {
+        q: 'How does the point system work?',
+        a: 'Points reward showing up and finishing one thing at a time. You earn points for your first visit of the day, for logging a mood, for rating a task\'s difficulty the first time, and for marking a task complete. Finishing a task on or before its deadline earns a small bonus. Daily awards are counted once per calendar day, so re-opening the app does not double-count anything.',
+      },
+      {
+        q: 'What can I do with points?',
+        a: 'Right now, points unlock sections of a hand-drawn illustration on the Redeem page. You pick a colour, you fill a section, you save a few points for the next piece. We are actively working on more ways to redeem your points, including sharing your finished pages with the community in a future update.',
+      },
+      {
+        q: 'What does the dashboard insight do?',
+        a: 'A rules engine watches your last 14 days for seven patterns such as grinding, sustained low mood, or genuine recovery. When one of them is clearly firing, the card appears with two small sparklines and one short sentence. If nothing is firing, nothing is said, so the card does not become background noise.',
+      },
+      {
+        q: 'What can the AI assistant do?',
+        a: 'The chat bubble on every page can answer questions about Pace itself and manage your tasks in plain English. It can add, rename, reschedule, change difficulty, move between groups, complete, reopen, and delete tasks, one task at a time. It will not browse the web, write emails, draft resumes, or do anything outside Pace.',
+      },
+      {
+        q: 'How is my mood used?',
+        a: 'The task list reorders itself to put lighter work first on Rough and Okay days. The planner reads your mood when it proposes daily steps for a goal, so a Rough week gets a lighter plan than a Great one. Nothing is shared outside your own account.',
+      },
+      {
+        q: 'Can I pause my streak?',
+        a: 'Yes. In Settings, pause the streak and your count freezes in place. Resume when you are ready and the count picks up from where you left it, without punishing you for the break.',
+      },
+      {
+        q: 'Where is my data stored?',
+        a: 'Authentication runs on Supabase. Every other row (tasks, groups, check-ins, points, drawings, insights) lives in a TigerData service, which is Postgres with the TimescaleDB extension. All queries are scoped by your user id, with no sharing across accounts.',
+      },
+    ],
     sessionHeading: 'Session',
     dangerHeading: 'Danger zone',
     emailLabel: 'Email',
@@ -338,7 +374,7 @@ export const copy = {
     panelLabel: 'Pace assistant',
     heading: 'Assistant',
     intro:
-      'Ask about Pace or tell me a task to add, update, complete, reopen, or delete tasks.',
+      'Ask about Pace, or tell me ONE task action at a time: add, rename, reschedule, change difficulty, move between groups, complete, reopen or delete. Shift+Enter adds a new line.',
     inputLabel: 'Your request',
     inputPlaceholder: 'e.g. Add "polish resume" for tomorrow',
     send: 'Send',
@@ -353,16 +389,35 @@ export const copy = {
     needsName: 'What should I rename it to?',
     needsNewTitle: 'What should the task be called?',
     needsDeadline: 'What is the new deadline?',
+    needsDifficulty: 'What difficulty from 1 to 10 should I set?',
+    needsGroup:
+      'Which group should I move it to? Say "ungroup" to remove it from its current group.',
     noMatch: 'I could not find a task that matches.',
     tooManyMatches:
       'A few tasks match that. Can you give the exact title?',
+    groupNoMatch:
+      'I could not find a group called "{name}". Create it from the planner first, then try again.',
+    groupAmbiguous:
+      'A few groups match that. Can you give the exact group name?',
+    greetingFallback:
+      'Hi! I can add, rename, reschedule, change difficulty, move between groups, complete, reopen or delete tasks. What do you want to do?',
+    typing: 'Typing',
     actionDone: {
       created: 'Added "{title}".',
       updated: 'Updated "{title}".',
+      moved: 'Moved "{title}" to "{group}".',
+      ungrouped: 'Removed "{title}" from its group.',
       completed: 'Marked "{title}" complete.',
       uncompleted: 'Reopened "{title}".',
       deleted: 'Deleted "{title}".',
     },
+  },
+  footer: {
+    createdWith: 'Created with',
+    heartAria: 'love',
+    byPrefix: 'by',
+    handle: 'haingo-raz',
+    year: '2026',
   },
   errors: {
     generic: 'Something went wrong. Try again.',

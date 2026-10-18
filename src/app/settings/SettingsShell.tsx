@@ -12,6 +12,7 @@ import { copy, fill } from '@/content/en'
 import type { EmploymentStatus, Profile } from '@/types'
 // import { ChangeEmailDialog } from './ChangeEmailDialog'
 import { DeleteAccountDialog } from './DeleteAccountDialog'
+import { Faq } from '@/components/Faq'
 
 type Props = {
   email: string
@@ -242,6 +243,18 @@ export function SettingsShell({
             </Button>
           </div>
         </Card>
+      </section>
+
+      <section className="mt-6">
+        <h2
+          className="text-lg font-semibold text-[var(--text)]"
+          style={{ fontFamily: 'var(--font-fraunces)' }}
+        >
+          {copy.settings.faqHeading}
+        </h2>
+        <div className="mt-3">
+          <Faq items={copy.settings.faq} />
+        </div>
       </section>
 
       <section className="mt-6">

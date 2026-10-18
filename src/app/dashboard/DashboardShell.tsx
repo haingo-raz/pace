@@ -15,7 +15,6 @@ import { BrandMark } from '@/components/BrandMark'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { StarGlyph } from '@/components/StarGlyph'
 import type { Insight } from '@/lib/insights'
-import { SignOutButton } from './SignOutButton'
 import { announce } from '@/lib/announce'
 import { apiFetch } from '@/lib/http'
 import { POINTS_DELTA_MS } from '@/config/constants'
@@ -492,9 +491,6 @@ export function DashboardShell({
         </div>
       </section>
 
-      <div className="mt-10">
-        <SignOutButton />
-      </div>
     </>
   )
 }

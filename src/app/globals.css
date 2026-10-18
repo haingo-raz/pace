@@ -103,6 +103,20 @@ body {
   }
 }
 
+.assistant-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--muted);
+  animation: assistant-bounce 1200ms infinite ease-in-out;
+}
+
+@keyframes assistant-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: .5; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

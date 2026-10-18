@@ -252,14 +252,6 @@ export function TaskList({
               )
             }
             const g = section.group
-            const total = section.tasks.length
-            const done = section.tasks.filter(
-              (t) => t.completed_at !== null,
-            ).length
-            const summary =
-              total === 1
-                ? fill(copy.tasks.groupSummaryOne, { done })
-                : fill(copy.tasks.groupSummary, { total, done })
             return (
               <section
                 key={g.id}
@@ -277,7 +269,7 @@ export function TaskList({
                   >
                     {g.title}
                   </h3>
-                  <p className="text-xs text-[var(--muted)]">{summary}</p>
+                  {/* Per-group task count ("X tasks, Y done") hidden intentionally. */}
                 </div>
                 {section.tasks.length > 0 ? (
                   <ul className="flex flex-col gap-2">
