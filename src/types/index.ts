@@ -41,6 +41,7 @@ export type Profile = {
   streak_paused: boolean
   employment_status: EmploymentStatus | null
   preferred_name: string | null
+  onboarded_at: string | null
   created_at: string
 }
 

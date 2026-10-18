@@ -13,6 +13,7 @@ import type { EmploymentStatus, Profile } from '@/types'
 // import { ChangeEmailDialog } from './ChangeEmailDialog'
 import { DeleteAccountDialog } from './DeleteAccountDialog'
 import { Faq } from '@/components/Faq'
+import { ONBOARDING_REPLAY_EVENT } from '@/components/Onboarding'
 
 type Props = {
   email: string
@@ -101,6 +102,28 @@ export function SettingsShell({
         : copy.settings.streakResumedDone,
     )
     router.refresh()
+  }
+
+  async function replayTour() {
+    const res = await apiFetch<{ onboarded_at: string | null }>(
+      '/api/me/onboarding',
+      {
+        method: 'POST',
+        body: JSON.stringify({ skipped: false, replay: true }),
+      },
+    )
+    if (!res.ok) {
+      toast.error(copy.errors.generic)
+      return
+    }
+    if (window.location.pathname !== '/dashboard') {
+      // Push and let the dashboard's mount effect fire the tour via its
+      // GET /api/me/onboarding call.
+      router.push('/dashboard')
+      return
+    }
+    // Already on dashboard: broadcast the event the component listens for.
+    window.dispatchEvent(new CustomEvent(ONBOARDING_REPLAY_EVENT))
   }
 
   async function signOut() {
@@ -240,6 +263,25 @@ export function SettingsShell({
               aria-pressed={paused}
             >
               {paused ? copy.settings.streakResume : copy.settings.streakPause}
+            </Button>
+          </div>
+        </Card>
+      </section>
+
+      <section className="mt-6">
+        <h2
+          className="text-lg font-semibold text-[var(--text)]"
+          style={{ fontFamily: 'var(--font-fraunces)' }}
+        >
+          {copy.onboarding.heading}
+        </h2>
+        <Card className="mt-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-[var(--muted)]">
+              {copy.onboarding.replayHint}
+            </p>
+            <Button type="button" variant="secondary" onClick={replayTour}>
+              {copy.onboarding.replay}
             </Button>
           </div>
         </Card>

@@ -38,6 +38,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               key={href}
               href={href}
               aria-current={active ? 'page' : undefined}
+              data-tour={href === '/coloring' ? 'color-nav' : undefined}
               className={
                 'flex items-center gap-3 rounded-md px-3 py-2 min-h-11 text-sm ' +
                 (active
@@ -76,6 +77,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               key={href}
               href={href}
               aria-current={active ? 'page' : undefined}
+              data-tour={href === '/coloring' ? 'color-nav' : undefined}
               className={
                 'flex-1 flex flex-col items-center justify-center gap-1 min-h-16 text-xs ' +
                 (active

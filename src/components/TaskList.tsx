@@ -343,7 +343,7 @@ function TaskRow({
         }`
 
   return (
-    <li>
+    <li data-tour="task-row">
       <Card
         className={
           'flex items-center justify-between gap-3 py-3 ' +

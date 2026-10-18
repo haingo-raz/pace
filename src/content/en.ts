@@ -412,6 +412,35 @@ export const copy = {
       deleted: 'Deleted "{title}".',
     },
   },
+  onboarding: {
+    stepAria: 'Step {current} of {total}, {label}',
+    prev: 'Back',
+    next: 'Next',
+    done: 'Done',
+    skip: 'Skip tour',
+    stepLabelPoints: 'points',
+    stepLabelStreak: 'streak',
+    stepLabelMood: 'mood check-in',
+    stepLabelAddTask: 'adding tasks',
+    stepLabelTaskRow: 'a task card',
+    stepLabelColorNav: 'the Redeem page',
+    stepCopyPoints:
+      'Your points live here. You earn them by showing up and doing the small things.',
+    stepCopyStreak:
+      'Streak counts the days you check in. If you miss one, Pace gives you forty-eight hours to come back.',
+    stepCopyMood:
+      "Log how today's going. Rough days still count, you're not judged for them.",
+    stepCopyAddTask:
+      'Add tasks manually, or let the AI plan a goal into sustainable daily steps.',
+    stepCopyTaskRow:
+      'Each task has a slider for how hard it feels, an optional deadline, and a menu with edit, done, delete.',
+    stepCopyColorNav:
+      'Spend points here. Two points to colour one section, a small reward you choose when to take.',
+    replay: 'Replay tour',
+    replayHint: 'Walk through the six-step tour again, from the dashboard.',
+    stepCounter: 'Step {current} of {total}',
+    heading: 'Welcome to Pace',
+  },
   footer: {
     createdWith: 'Created with',
     heartAria: 'love',

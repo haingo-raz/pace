@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { Onboarding } from '@/components/Onboarding'
 import { PointsBadge } from '@/components/PointsBadge'
 import { MoodCheckIn } from '@/components/MoodCheckIn'
 import { TodayCard } from '@/components/TodayCard'
@@ -214,10 +215,11 @@ export function DashboardShell({
         </div>
         <div className="hidden md:block flex-1" aria-hidden="true" />
         <div className="flex items-center gap-2">
-          <span title={copy.tasks.tooltipPoints}>
+          <span data-tour="points" title={copy.tasks.tooltipPoints}>
             <PointsBadge total={pointsTotal} delta={delta} />
           </span>
           <span
+            data-tour="streak"
             aria-label={
               streakPaused
                 ? copy.settings.streakStatusPaused
@@ -284,7 +286,7 @@ export function DashboardShell({
         />
       </section>
 
-      <section className="mt-6">
+      <section className="mt-6" data-tour="mood">
         {hasCheckedIn && todayMood !== null ? (
           <TodayCard
             initialMood={todayMood}
@@ -322,6 +324,7 @@ export function DashboardShell({
             </Card>
           ) : null}
           <div
+            data-tour="add-task"
             role="tablist"
             aria-label={copy.tasks.heading}
             onKeyDown={onInputTabKey}
@@ -517,6 +520,7 @@ export function DashboardShell({
         </div>
       </section>
 
+      <Onboarding />
     </>
   )
 }

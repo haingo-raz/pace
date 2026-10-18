@@ -14,7 +14,7 @@ export async function getProfile(
     const [row] = await tx<Profile[]>`
       select user_id, points_total, streak_count, last_visit_day,
              last_streak_day, timezone, streak_paused,
-             employment_status, preferred_name, created_at
+             employment_status, preferred_name, onboarded_at, created_at
       from profiles
       where user_id = ${userId}
     `
@@ -22,7 +22,7 @@ export async function getProfile(
   } catch (e) {
     if ((e as { code?: string }).code !== UNDEFINED_COLUMN) throw e
     const [row] = await tx<
-      Array<Omit<Profile, 'employment_status' | 'preferred_name'>>
+      Array<Omit<Profile, 'employment_status' | 'preferred_name' | 'onboarded_at'>>
     >`
       select user_id, points_total, streak_count, last_visit_day,
              last_streak_day, timezone, streak_paused, created_at
@@ -30,8 +30,56 @@ export async function getProfile(
       where user_id = ${userId}
     `
     return row
-      ? { ...row, employment_status: null, preferred_name: null }
+      ? {
+          ...row,
+          employment_status: null,
+          preferred_name: null,
+          onboarded_at: null,
+        }
       : null
+  }
+}
+
+/**
+ * Marks the user as having seen the onboarding tour (or skipped it).
+ * Idempotent: the field only moves from null to a timestamp once. A
+ * second call keeps the original timestamp.
+ */
+export async function markOnboarded(
+  userId: string,
+  tx: Db = sql,
+): Promise<string | null> {
+  try {
+    const [row] = await tx<{ onboarded_at: Date | null }[]>`
+      update profiles
+      set onboarded_at = coalesce(onboarded_at, now())
+      where user_id = ${userId}
+      returning onboarded_at
+    `
+    return row?.onboarded_at ? row.onboarded_at.toISOString() : null
+  } catch (e) {
+    if ((e as { code?: string }).code === UNDEFINED_COLUMN) return null
+    throw e
+  }
+}
+
+/**
+ * Clears the onboarding timestamp so the tour fires again on next load.
+ * Used by Settings -> Replay tour.
+ */
+export async function resetOnboarding(
+  userId: string,
+  tx: Db = sql,
+): Promise<void> {
+  try {
+    await tx`
+      update profiles
+      set onboarded_at = null
+      where user_id = ${userId}
+    `
+  } catch (e) {
+    if ((e as { code?: string }).code === UNDEFINED_COLUMN) return
+    throw e
   }
 }
 
