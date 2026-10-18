@@ -1,11 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Sparkline } from '@/components/Sparkline'
-import { useToast } from '@/components/ui/Toast'
-import { apiFetch } from '@/lib/http'
-import { announce } from '@/lib/announce'
 import { copy, fill } from '@/content/en'
 import type { Insight, SparkSeries } from '@/lib/insights'
 import {
@@ -19,7 +15,7 @@ import {
 type Props = {
   insight: Insight
   sentence: string
-  streakAtRisk: boolean
+  streakAtRisk?: boolean
 }
 
 function labelFor(series: SparkSeries): string {
@@ -52,31 +48,8 @@ function latest(values: Array<number | null>): number | null {
 }
 
 export function InsightCard({ insight, sentence, streakAtRisk }: Props) {
-  const toast = useToast()
-  const [dismissed, setDismissed] = useState(false)
-  const [pending, setPending] = useState(false)
-
   const shouldHide =
-    dismissed || insight.kind === 'STEADY' || insight.kind === 'NEED_MORE_DATA'
-
-  async function onDismiss() {
-    if (pending) return
-    setPending(true)
-    const res = await apiFetch<{ dismissed: boolean }>('/api/insight', {
-      method: 'POST',
-      body: JSON.stringify({ pattern: insight.kind }),
-    })
-    setPending(false)
-    if (!res.ok) {
-      const msg =
-        (copy.errors as Record<string, string | undefined>)[res.error.code] ??
-        copy.errors.generic
-      toast.error(msg)
-      return
-    }
-    announce(copy.insight.dismissed)
-    setDismissed(true)
-  }
+    insight.kind === 'STEADY' || insight.kind === 'NEED_MORE_DATA'
 
   if (shouldHide) {
     if (streakAtRisk) {
@@ -93,7 +66,7 @@ export function InsightCard({ insight, sentence, streakAtRisk }: Props) {
 
   return (
     <Card role="status" className="border-[var(--accent)]">
-      <header className="flex items-start justify-between gap-3">
+      <header>
         <h2
           className="font-semibold text-[var(--text)]"
           style={{
@@ -103,14 +76,6 @@ export function InsightCard({ insight, sentence, streakAtRisk }: Props) {
         >
           {copy.insight.heading}
         </h2>
-        <button
-          type="button"
-          onClick={onDismiss}
-          disabled={pending}
-          className="min-h-11 px-3 text-sm text-[var(--muted)] underline underline-offset-4 hover:text-[var(--text)]"
-        >
-          {copy.insight.dismiss}
-        </button>
       </header>
 
       <p className="mt-2 text-[var(--text)]">{sentence}</p>

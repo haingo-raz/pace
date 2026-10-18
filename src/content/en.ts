@@ -16,11 +16,15 @@ export const copy = {
     streakLabel: 'Streak',
     streakAria: '{n} day streak',
     streakPausedTag: 'paused',
+    greetingAnon: 'Hi there!',
+    greetingNamed: 'Hi there, {name}!',
   } as {
     pointsLabel: string
     streakLabel: string
     streakAria: string
     streakPausedTag: string
+    greetingAnon: string
+    greetingNamed: string
   },
   landing: {
     description:
@@ -43,6 +47,7 @@ export const copy = {
     skip: 'Skip for now',
     done: 'Logged for today',
     announced: 'Logged. You earned {points} points.',
+    todayPrefix: 'Today:',
     todayMood: 'Today: {mood}',
     change: 'Feeling different? Change it.',
     todayStats: '{points} points today, {tasks} tasks done',
@@ -107,6 +112,13 @@ export const copy = {
     tooltipStreak: 'Daily streak',
     tooltipCompleteIcon: 'Mark complete',
     tooltipMenu: 'Task actions',
+    toastCompleted: 'Task successfully marked as completed.',
+    toastDeleted: 'Task successfully deleted.',
+    toastUncompleted: 'Task successfully marked as incomplete.',
+    toastUpdated: 'Task successfully updated.',
+    toastCompleteFailed: 'Could not mark that task complete.',
+    toastUpdateFailed: 'Could not update that task.',
+    toastDeleteFailed: 'Could not delete that task.',
     announcedRestoredToActive: 'Task restored to the Active list.',
     menuLabel: 'Task options for {title}',
     menuAria: 'Task actions',
@@ -116,7 +128,7 @@ export const copy = {
     editHeading: 'Edit task',
     editSave: 'Save',
     editCancel: 'Cancel',
-    editSaved: 'Task updated.',
+    editSaved: 'Task successfully updated.',
     announcedUncompleted:
       'Task reopened. You can re-complete to earn points again.',
     difficultyHintEdit: 'Changing difficulty does not change points earned.',
@@ -158,6 +170,24 @@ export const copy = {
   settings: {
     heading: 'Settings',
     accountHeading: 'Account',
+    personalHeading: 'About you',
+    personalExplain:
+      'Optional. Shared with the AI planner and assistant so they can suggest realistic steps for your situation.',
+    preferredNameLabel: 'What would you like to be called?',
+    preferredNamePlaceholder: 'Alex',
+    preferredNameHint: 'Leave empty to be greeted anonymously.',
+    employmentLabel: 'Employment status',
+    employmentUnset: '— Prefer not to say —',
+    employmentFullTime: 'Full-time',
+    employmentPartTime: 'Part-time',
+    employmentUnemployed: 'Unemployed',
+    employmentVolunteerFullTime: 'Volunteering full-time',
+    employmentVolunteerPartTime: 'Volunteering part-time',
+    employmentStudentFullTime: 'Student full-time',
+    employmentStudentPartTime: 'Student part-time',
+    personalSave: 'Save',
+    personalSaved: 'Preferences updated.',
+    personalSaveFailed: 'Could not update your preferences.',
     streakHeading: 'Streak',
     streakStatusActive: 'Streak tracking is on.',
     streakStatusPaused: 'Streak tracking is paused.',
@@ -299,6 +329,39 @@ export const copy = {
         'Mood is coming back up without easing off. Good run.',
       STEADY: '',
       NEED_MORE_DATA: '',
+    },
+  },
+  assistant: {
+    bubbleOpen: 'Open the Pace assistant',
+    bubbleClose: 'Close the Pace assistant',
+    dragHandleAria: 'Drag to move the assistant',
+    panelLabel: 'Pace assistant',
+    heading: 'Assistant',
+    intro:
+      'Ask about Pace or tell me a task to add, update, complete, reopen, or delete tasks.',
+    inputLabel: 'Your request',
+    inputPlaceholder: 'e.g. Add "polish resume" for tomorrow',
+    send: 'Send',
+    sending: 'Thinking…',
+    outOfScope:
+      'I can only help with Pace itself or with your tasks. Try asking about a feature or a task you have.',
+    unavailable:
+      'The assistant is unavailable right now. Try again in a bit.',
+    rateLimited:
+      'That is a lot of requests. Give it a moment and try again.',
+    needsTitle: 'Which task did you mean? Please include its title.',
+    needsName: 'What should I rename it to?',
+    needsNewTitle: 'What should the task be called?',
+    needsDeadline: 'What is the new deadline?',
+    noMatch: 'I could not find a task that matches.',
+    tooManyMatches:
+      'A few tasks match that. Can you give the exact title?',
+    actionDone: {
+      created: 'Added "{title}".',
+      updated: 'Updated "{title}".',
+      completed: 'Marked "{title}" complete.',
+      uncompleted: 'Reopened "{title}".',
+      deleted: 'Deleted "{title}".',
     },
   },
   errors: {

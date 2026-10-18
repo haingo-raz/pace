@@ -3,7 +3,11 @@ import { ApiError, ok, withRoute } from '@/lib/api'
 import { requireUser } from '@/lib/auth'
 import { planGoal } from '@/lib/goalPlan'
 import { hitRateLimit } from '@/lib/rateLimit'
+import { getProfile } from '@/lib/queries/profile'
+import { getTodayCheckin } from '@/lib/queries/checkins'
+import { todayFor } from '@/lib/queries/day'
 import {
+  DEFAULT_TIMEZONE,
   GOAL_INPUT_MAX,
   GOAL_PLAN_MAX_PER_HOUR,
   GOAL_PLAN_WINDOW_MS,
@@ -36,6 +40,14 @@ export const POST = withRoute('POST /api/goals/plan', async (req, _ctx, requestI
     })
   }
 
-  const plan = await planGoal(goal, requestId)
+  const profile = await getProfile(userId)
+  const timezone = profile?.timezone ?? DEFAULT_TIMEZONE
+  const checkin = await getTodayCheckin(userId, todayFor(timezone))
+
+  const plan = await planGoal(goal, requestId, {
+    preferredName: profile?.preferred_name ?? null,
+    employmentStatus: profile?.employment_status ?? null,
+    mood: checkin?.mood_score ?? null,
+  })
   return ok({ plan }, requestId)
 })

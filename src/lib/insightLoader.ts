@@ -1,14 +1,26 @@
 import 'server-only'
 import { detectInsight, type Insight } from '@/lib/insights'
+import { getInsightSeries } from '@/lib/queries/insights'
 import {
-  getInsightSeries,
-  hasDismissedToday,
-} from '@/lib/queries/insights'
+  getInsightCache,
+  setInsightCache,
+} from '@/lib/queries/insightCache'
 import { phrasedSentence } from '@/lib/insightCopy'
 
 export type InsightPayload = {
   insight: Insight
   sentence: string
+}
+
+function numbersEqual(
+  a: Record<string, number>,
+  b: Record<string, number>,
+): boolean {
+  const ak = Object.keys(a)
+  const bk = Object.keys(b)
+  if (ak.length !== bk.length) return false
+  for (const k of ak) if (a[k] !== b[k]) return false
+  return true
 }
 
 export async function loadInsight(
@@ -26,21 +38,34 @@ export async function loadInsight(
     sectionsLast7: series.sectionsLast7,
   })
 
-  if (await hasDismissedToday(userId, insight.kind, today)) {
-    return { insight: { ...insight, kind: 'STEADY' }, sentence: '' }
-  }
-
   const needsPhrase =
     insight.kind !== 'STEADY' && insight.kind !== 'NEED_MORE_DATA'
-  const sentence = needsPhrase
-    ? await phrasedSentence(
-        userId,
-        insight.kind,
-        insight.evidence.numbers,
-        today,
-        requestId,
-      )
-    : ''
+
+  if (!needsPhrase) {
+    return { insight, sentence: '' }
+  }
+
+  const cached = await getInsightCache(userId, today)
+  const numbers = insight.evidence.numbers
+  if (
+    cached &&
+    cached.kind === insight.kind &&
+    numbersEqual(cached.numbers, numbers)
+  ) {
+    return { insight, sentence: cached.sentence }
+  }
+
+  const sentence = await phrasedSentence(
+    userId,
+    insight.kind,
+    numbers,
+    today,
+    requestId,
+  )
+
+  if (sentence) {
+    await setInsightCache(userId, today, insight.kind, numbers, sentence)
+  }
 
   return { insight, sentence }
 }

@@ -134,6 +134,7 @@ export function TaskList({
     if (res.data.pointsAwarded > 0) {
       announce(fill(copy.tasks.announced, { points: res.data.pointsAwarded }))
     }
+    toast.success(copy.tasks.toastCompleted)
     onCompleted({
       pointsAwarded: res.data.pointsAwarded,
       pointsTotal: res.data.pointsTotal,
@@ -156,7 +157,7 @@ export function TaskList({
       return
     }
     announce(copy.tasks.announcedUncompleted)
-    toast.success(copy.tasks.announcedUncompleted)
+    toast.success(copy.tasks.toastUncompleted)
     if (mode === 'done' && onRestored) {
       announce(copy.tasks.announcedRestoredToActive)
       onRestored(res.data.task)
@@ -180,6 +181,7 @@ export function TaskList({
       return
     }
     announce(copy.tasks.announcedDeleted)
+    toast.success(copy.tasks.toastDeleted)
     onDeleted(task.id)
   }
 

@@ -3,10 +3,12 @@ import { AppShell } from '@/components/ui/AppShell'
 import { Card } from '@/components/ui/Card'
 import { LineChart } from '@/components/LineChart'
 import { BarChart } from '@/components/BarChart'
+import { InsightCard } from '@/components/InsightCard'
 import { requireUser } from '@/lib/auth'
 import { getStats } from '@/lib/queries/stats'
 import { getProfile } from '@/lib/queries/profile'
 import { todayFor } from '@/lib/queries/day'
+import { loadInsight } from '@/lib/insightLoader'
 import { copy, fill } from '@/content/en'
 import {
   DEFAULT_TIMEZONE,
@@ -45,7 +47,10 @@ export default async function StatsPage({
   const profile = await getProfile(userId)
   const timezone = profile?.timezone ?? DEFAULT_TIMEZONE
   const today = todayFor(timezone)
-  const stats = await getStats(userId, timezone, today, days)
+  const [stats, insightPayload] = await Promise.all([
+    getStats(userId, timezone, today, days),
+    loadInsight(userId, timezone, today, profile?.streak_count ?? 0, 'stats_load'),
+  ])
   const streak = profile?.streak_count ?? 0
   const hasData = stats.totals.checkinsInRange >= STATS_MIN_DATA_DAYS
 
@@ -141,6 +146,13 @@ export default async function StatsPage({
           </Card>
         </section>
       )}
+
+      <section className="mt-6">
+        <InsightCard
+          insight={insightPayload.insight}
+          sentence={insightPayload.sentence}
+        />
+      </section>
     </AppShell>
   )
 }

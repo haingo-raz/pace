@@ -19,13 +19,6 @@ function writtenSentence(
   return fill(template, vars)
 }
 
-type CacheEntry = { day: string; text: string }
-const cache = new Map<string, CacheEntry>()
-
-function cacheKey(userId: string, kind: InsightKind): string {
-  return `${userId}:${kind}`
-}
-
 const phraseJsonSchema = {
   type: 'object',
   properties: {
@@ -37,25 +30,21 @@ const phraseJsonSchema = {
 const PhraseResult = z.object({ sentence: z.string().trim().min(1).max(240) })
 
 /**
- * Phrase the insight more naturally via Gemini, cached per user per day.
+ * Phrase the insight more naturally via Gemini.
  * Returns the written sentence on any failure. Never throws.
+ * Caller is responsible for caching the result (see insight_cache).
  */
 export async function phrasedSentence(
-  userId: string,
+  _userId: string,
   kind: InsightKind,
   numbers: Record<string, number>,
-  todayYMD: string,
+  _todayYMD: string,
   requestId: string,
 ): Promise<string> {
   const written = writtenSentence(kind, numbers)
   if (!written) return ''
 
-  const key = cacheKey(userId, kind)
-  const hit = cache.get(key)
-  if (hit && hit.day === todayYMD) return hit.text
-
   function fallback(): string {
-    cache.set(key, { day: todayYMD, text: written })
     return written
   }
 
@@ -94,7 +83,6 @@ Return JSON {"sentence": "..."}.`
       throw new Error('empty output_text')
     }
     const parsed = PhraseResult.parse(JSON.parse(text))
-    cache.set(key, { day: todayYMD, text: parsed.sentence })
     logger.info({
       requestId,
       event: 'gemini_call',

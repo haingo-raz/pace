@@ -40,6 +40,7 @@ type Props = {
   insight: Insight
   insightSentence: string
   streakAtRisk: boolean
+  preferredName: string | null
 }
 
 type TasksResponse = {
@@ -69,6 +70,7 @@ export function DashboardShell({
   insight,
   insightSentence,
   streakAtRisk,
+  preferredName,
 }: Props) {
   const router = useRouter()
   const pathname = usePathname()
@@ -170,6 +172,13 @@ export function DashboardShell({
     void refresh()
   }
 
+  useEffect(() => {
+    const onExternalChange = () => void refresh()
+    window.addEventListener('pace:tasks-changed', onExternalChange)
+    return () =>
+      window.removeEventListener('pace:tasks-changed', onExternalChange)
+  }, [refresh])
+
   return (
     <>
       <header
@@ -227,6 +236,20 @@ export function DashboardShell({
           <ThemeToggle />
         </div>
       </header>
+
+      <section className="mt-4">
+        <h1
+          className="font-semibold text-[var(--text)]"
+          style={{
+            fontFamily: 'var(--font-fraunces)',
+            fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+          }}
+        >
+          {preferredName
+            ? fill(copy.dashboard.greetingNamed, { name: preferredName })
+            : copy.dashboard.greetingAnon}
+        </h1>
+      </section>
 
       <section className="mt-6">
         <InsightCard

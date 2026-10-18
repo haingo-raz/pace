@@ -22,6 +22,15 @@ export type TaskGroup = {
   created_at: string
 }
 
+export type EmploymentStatus =
+  | 'full_time'
+  | 'part_time'
+  | 'unemployed'
+  | 'volunteer_full_time'
+  | 'volunteer_part_time'
+  | 'student_full_time'
+  | 'student_part_time'
+
 export type Profile = {
   user_id: string
   points_total: number
@@ -30,6 +39,8 @@ export type Profile = {
   last_streak_day: string | null
   timezone: string
   streak_paused: boolean
+  employment_status: EmploymentStatus | null
+  preferred_name: string | null
   created_at: string
 }
 
@@ -83,3 +94,11 @@ export type UserDrawing = {
   completed_at: string | null
   created_at: string
 }
+
+export type AssistantReply =
+  | { kind: 'answer'; text: string }
+  | { kind: 'needs_info'; text: string }
+  | { kind: 'out_of_scope'; text: string }
+  | { kind: 'no_match'; text: string }
+  | { kind: 'ambiguous'; text: string }
+  | { kind: 'action_done'; text: string; task?: Task }

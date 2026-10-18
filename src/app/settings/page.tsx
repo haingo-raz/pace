@@ -21,6 +21,8 @@ export default async function SettingsPage() {
         email={email}
         streakPaused={profile?.streak_paused ?? false}
         streakCount={profile?.streak_count ?? 0}
+        employmentStatus={profile?.employment_status ?? null}
+        preferredName={profile?.preferred_name ?? null}
       />
     </AppShell>
   )

@@ -66,6 +66,7 @@ export default async function DashboardPage({
         insight={insightPayload.insight}
         insightSentence={insightPayload.sentence}
         streakAtRisk={streakGraceUsed}
+        preferredName={profile.preferred_name}
       />
     </AppShell>
   )

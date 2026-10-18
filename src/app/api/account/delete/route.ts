@@ -56,6 +56,12 @@ export const POST = withRoute(
         if (code !== '42P01') throw e
       }
       try {
+        await tx`delete from insight_cache where user_id = ${userId}`
+      } catch (e) {
+        const code = (e as { code?: string }).code
+        if (code !== '42P01') throw e
+      }
+      try {
         await tx`delete from quiz_attempts where user_id = ${userId}`
       } catch (e) {
         const code = (e as { code?: string }).code

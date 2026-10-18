@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/Card'
 import { apiFetch } from '@/lib/http'
 import { announce } from '@/lib/announce'
 import { copy, fill } from '@/content/en'
+import { pickMoodQuote } from '@/content/moodQuotes'
 import type { MoodScore } from '@/types'
 
 type Props = {
@@ -21,6 +22,10 @@ const MOODS: { score: MoodScore; emoji: string }[] = [
   { score: 4, emoji: '🌈' },
 ]
 
+function emojiFor(mood: MoodScore): string {
+  return MOODS.find((m) => m.score === mood)?.emoji ?? ''
+}
+
 export function TodayCard({
   initialMood,
   pointsToday,
@@ -30,6 +35,14 @@ export function TodayCard({
   const [mood, setMood] = useState<MoodScore>(initialMood)
   const [editing, setEditing] = useState(false)
   const [pending, setPending] = useState<MoodScore | null>(null)
+  // Quote is picked after mount so SSR and client agree on an empty start,
+  // then the client picks one randomly from the mood-specific list.
+  const [quote, setQuote] = useState<string>('')
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setQuote(pickMoodQuote(mood))
+  }, [mood])
 
   async function pick(next: MoodScore) {
     if (pending !== null) return
@@ -95,15 +108,28 @@ export function TodayCard({
   }
 
   const moodLabel = copy.checkin.moods[mood]
+  const emoji = emojiFor(mood)
   return (
     <Card aria-live="polite">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[var(--text)]">
-            {fill(copy.checkin.todayMood, { mood: moodLabel })}
+        <div className="min-w-0">
+          <p className="text-[var(--text)] text-lg">
+            <span className="font-bold">{copy.checkin.todayPrefix}</span>{' '}
+            <span>{moodLabel}</span>{' '}
+            <span aria-hidden="true" className="text-xl align-middle">
+              {emoji}
+            </span>
           </p>
+          {quote ? (
+            <p
+              className="mt-2 italic text-[var(--muted)]"
+              style={{ fontFamily: 'var(--font-fraunces)' }}
+            >
+              {quote}
+            </p>
+          ) : null}
           <p
-            className="mt-1 text-sm text-[var(--muted)]"
+            className="mt-2 text-sm text-[var(--muted)]"
             style={{ fontVariantNumeric: 'tabular-nums' }}
           >
             {fill(copy.checkin.todayStats, {

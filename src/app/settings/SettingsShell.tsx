@@ -4,23 +4,81 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
 import { useToast } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
 import { apiFetch } from '@/lib/http'
 import { copy, fill } from '@/content/en'
+import type { EmploymentStatus, Profile } from '@/types'
 // import { ChangeEmailDialog } from './ChangeEmailDialog'
 import { DeleteAccountDialog } from './DeleteAccountDialog'
 
-type Props = { email: string; streakPaused: boolean; streakCount: number }
+type Props = {
+  email: string
+  streakPaused: boolean
+  streakCount: number
+  employmentStatus: EmploymentStatus | null
+  preferredName: string | null
+}
 
-export function SettingsShell({ email, streakPaused, streakCount }: Props) {
+const EMPLOYMENT_LABEL: Record<EmploymentStatus, string> = {
+  full_time: copy.settings.employmentFullTime,
+  part_time: copy.settings.employmentPartTime,
+  unemployed: copy.settings.employmentUnemployed,
+  volunteer_full_time: copy.settings.employmentVolunteerFullTime,
+  volunteer_part_time: copy.settings.employmentVolunteerPartTime,
+  student_full_time: copy.settings.employmentStudentFullTime,
+  student_part_time: copy.settings.employmentStudentPartTime,
+}
+
+const EMPLOYMENT_ORDER: EmploymentStatus[] = [
+  'full_time',
+  'part_time',
+  'unemployed',
+  'volunteer_full_time',
+  'volunteer_part_time',
+  'student_full_time',
+  'student_part_time',
+]
+
+export function SettingsShell({
+  email,
+  streakPaused,
+  streakCount,
+  employmentStatus,
+  preferredName,
+}: Props) {
   const router = useRouter()
   const toast = useToast()
   const [signingOut, setSigningOut] = useState(false)
   const [paused, setPaused] = useState(streakPaused)
   const [pausing, setPausing] = useState(false)
+  const [name, setName] = useState(preferredName ?? '')
+  const [employment, setEmployment] = useState<EmploymentStatus | ''>(
+    employmentStatus ?? '',
+  )
+  const [savingPersonal, setSavingPersonal] = useState(false)
   // const [changeOpen, setChangeOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+
+  async function savePersonal() {
+    if (savingPersonal) return
+    setSavingPersonal(true)
+    const res = await apiFetch<{ profile: Profile }>('/api/account/profile', {
+      method: 'POST',
+      body: JSON.stringify({
+        preferred_name: name.trim() || null,
+        employment_status: employment === '' ? null : employment,
+      }),
+    })
+    setSavingPersonal(false)
+    if (!res.ok) {
+      toast.error(copy.settings.personalSaveFailed)
+      return
+    }
+    toast.success(copy.settings.personalSaved)
+    router.refresh()
+  }
 
   async function toggleStreak() {
     if (pausing) return
@@ -92,6 +150,62 @@ export function SettingsShell({ email, streakPaused, streakCount }: Props) {
             >
               {copy.settings.changeEmail}
             </Button> */}
+          </div>
+        </Card>
+      </section>
+
+      <section className="mt-6">
+        <h2
+          className="text-lg font-semibold text-[var(--text)]"
+          style={{ fontFamily: 'var(--font-fraunces)' }}
+        >
+          {copy.settings.personalHeading}
+        </h2>
+        <Card className="mt-3">
+          <p className="text-sm text-[var(--muted)]">
+            {copy.settings.personalExplain}
+          </p>
+          <div className="mt-4 flex flex-col gap-4">
+            <Input
+              label={copy.settings.preferredNameLabel}
+              placeholder={copy.settings.preferredNamePlaceholder}
+              hint={copy.settings.preferredNameHint}
+              value={name}
+              maxLength={60}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="employment-status"
+                className="text-sm font-medium text-[var(--text)]"
+              >
+                {copy.settings.employmentLabel}
+              </label>
+              <select
+                id="employment-status"
+                value={employment}
+                onChange={(e) =>
+                  setEmployment(e.target.value as EmploymentStatus | '')
+                }
+                className="w-full rounded-md border border-[var(--border)] bg-[var(--raised)] px-3 py-2 text-base text-[var(--text)]"
+              >
+                <option value="">{copy.settings.employmentUnset}</option>
+                {EMPLOYMENT_ORDER.map((v) => (
+                  <option key={v} value={v}>
+                    {EMPLOYMENT_LABEL[v]}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Button
+                type="button"
+                onClick={savePersonal}
+                pending={savingPersonal}
+              >
+                {copy.settings.personalSave}
+              </Button>
+            </div>
           </div>
         </Card>
       </section>
