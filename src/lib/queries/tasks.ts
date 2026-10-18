@@ -47,6 +47,39 @@ export async function listTasks(
   return rows.map(toTask)
 }
 
+export async function listActiveTasks(
+  userId: string,
+  tx: Db = sql,
+): Promise<Task[]> {
+  const rows = await tx<TaskRow[]>`
+    select ${TASK_COLUMNS}
+    from tasks
+    where user_id = ${userId} and completed_at is null
+    order by coalesce(group_id, ${UNGROUPED_SENTINEL}::uuid), position
+  `
+  return rows.map(toTask)
+}
+
+/**
+ * Completed tasks, newest completion first. Capped so a long history never
+ * dominates the screen; `truncated` is true when more rows exist beyond the cap.
+ */
+export async function listDoneTasks(
+  userId: string,
+  limit: number,
+  tx: Db = sql,
+): Promise<{ tasks: Task[]; truncated: boolean }> {
+  const rows = await tx<TaskRow[]>`
+    select ${TASK_COLUMNS}
+    from tasks
+    where user_id = ${userId} and completed_at is not null
+    order by completed_at desc
+    limit ${limit + 1}
+  `
+  const truncated = rows.length > limit
+  return { tasks: rows.slice(0, limit).map(toTask), truncated }
+}
+
 export async function insertTask(
   userId: string,
   title: string,

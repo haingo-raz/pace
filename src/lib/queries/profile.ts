@@ -10,11 +10,28 @@ export async function getProfile(
 ): Promise<Profile | null> {
   const [row] = await tx<Profile[]>`
     select user_id, points_total, streak_count, last_visit_day,
-           last_streak_day, timezone, created_at
+           last_streak_day, timezone, streak_paused, created_at
     from profiles
     where user_id = ${userId}
   `
   return row ?? null
+}
+
+export async function setStreakPaused(
+  userId: string,
+  paused: boolean,
+  today: string,
+  tx: Db = sql,
+): Promise<Profile | null> {
+  await tx`
+    update profiles
+    set streak_paused = ${paused},
+        last_streak_day = case when ${paused}::boolean = false
+                               then ${today}::date
+                               else last_streak_day end
+    where user_id = ${userId}
+  `
+  return getProfile(userId, tx)
 }
 
 export async function ensureProfile(

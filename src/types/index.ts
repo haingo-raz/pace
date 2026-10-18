@@ -29,6 +29,7 @@ export type Profile = {
   last_visit_day: string | null
   last_streak_day: string | null
   timezone: string
+  streak_paused: boolean
   created_at: string
 }
 

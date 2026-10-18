@@ -25,14 +25,19 @@ export async function runDailyVisit(
       ? daysBetween(previousStreakYMD, today)
       : null
     const streakGraceUsed =
-      preGap !== null && preGap > 1 && preGap <= STREAK_GRACE_DAYS
-    const streak = nextStreak(profile.streak_count, previousStreakYMD, today)
-    await tx`
-      update profiles
-      set streak_count = ${streak},
-          last_streak_day = ${today}
-      where user_id = ${userId}
-    `
+      !profile.streak_paused &&
+      preGap !== null &&
+      preGap > 1 &&
+      preGap <= STREAK_GRACE_DAYS
+    if (!profile.streak_paused) {
+      const streak = nextStreak(profile.streak_count, previousStreakYMD, today)
+      await tx`
+        update profiles
+        set streak_count = ${streak},
+            last_streak_day = ${today}
+        where user_id = ${userId}
+      `
+    }
 
     const [row] = await tx<{ user_id: string }[]>`
       update profiles

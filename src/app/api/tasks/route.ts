@@ -2,13 +2,18 @@ import { z } from 'zod'
 import { ApiError, ok, withRoute } from '@/lib/api'
 import { requireUser } from '@/lib/auth'
 import { sql } from '@/lib/db'
-import { insertTask, listTasks } from '@/lib/queries/tasks'
+import {
+  insertTask,
+  listActiveTasks,
+  listDoneTasks,
+} from '@/lib/queries/tasks'
 import { groupBelongsToUser, listGroups } from '@/lib/queries/taskGroups'
 import { awardPointsTx } from '@/lib/points'
 import { logger } from '@/lib/logger'
 import {
   DIFFICULTY_MAX,
   DIFFICULTY_MIN,
+  DONE_TASKS_LIMIT,
   POINTS_RATE_DIFFICULTY,
   POINT_REASONS,
   TASK_TITLE_MAX,
@@ -18,11 +23,15 @@ import type { Difficulty } from '@/types'
 
 export const GET = withRoute('GET /api/tasks', async (_req, _ctx, requestId) => {
   const userId = await requireUser()
-  const [groups, tasks] = await Promise.all([
+  const [groups, active, done] = await Promise.all([
     listGroups(userId),
-    listTasks(userId),
+    listActiveTasks(userId),
+    listDoneTasks(userId, DONE_TASKS_LIMIT),
   ])
-  return ok({ groups, tasks }, requestId)
+  return ok(
+    { groups, active, done: done.tasks, doneTruncated: done.truncated },
+    requestId,
+  )
 })
 
 const bodySchema = z

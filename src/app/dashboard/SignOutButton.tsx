@@ -32,6 +32,7 @@ export function SignOutButton() {
       onClick={onClick}
       disabled={pending}
       aria-label={copy.settings.signOutIconLabel}
+      title={copy.settings.signOut}
       aria-busy={pending || undefined}
       className="flex h-11 w-11 items-center justify-center rounded-md text-[var(--muted)] hover:text-[var(--text)] disabled:opacity-60"
     >

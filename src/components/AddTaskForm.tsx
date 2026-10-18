@@ -13,9 +13,13 @@ import {
   DIFFICULTY_MAX,
   DIFFICULTY_MIN,
   DIFFICULTY_STEP,
+  TASK_GROUP_TITLE_MAX,
   TASK_TITLE_MAX,
 } from '@/config/constants'
+import { announce } from '@/lib/announce'
 import type { Difficulty, Task, TaskGroup } from '@/types'
+
+const NEW_GROUP_VALUE = '__new__'
 
 type MutationResponse = {
   task: Task
@@ -26,22 +30,27 @@ type MutationResponse = {
 type Props = {
   onAdded: (res: MutationResponse) => void
   groups: TaskGroup[]
+  onGroupCreated?: (group: TaskGroup) => void
 }
 
-export function AddTaskForm({ onAdded, groups }: Props) {
+export function AddTaskForm({ onAdded, groups, onGroupCreated }: Props) {
   const toast = useToast()
   const titleRef = useRef<HTMLInputElement>(null)
+  const newGroupRef = useRef<HTMLInputElement>(null)
   const sliderId = useId()
   const sliderValueId = `${sliderId}-value`
   const sliderHintId = `${sliderId}-hint`
   const sliderErrorId = `${sliderId}-error`
   const groupId = useId()
+  const newGroupId = useId()
 
   const [title, setTitle] = useState('')
   const [difficulty, setDifficulty] = useState<number>(DIFFICULTY_DEFAULT)
   const [difficultyTouched, setDifficultyTouched] = useState(false)
   const [deadline, setDeadline] = useState('')
   const [groupSelection, setGroupSelection] = useState<string>('')
+  const [creatingGroup, setCreatingGroup] = useState(false)
+  const [newGroupName, setNewGroupName] = useState('')
   const [pending, setPending] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
@@ -51,7 +60,26 @@ export function AddTaskForm({ onAdded, groups }: Props) {
     setDifficultyTouched(false)
     setDeadline('')
     setGroupSelection('')
+    setCreatingGroup(false)
+    setNewGroupName('')
     setFieldErrors({})
+  }
+
+  function onGroupChange(value: string) {
+    if (value === NEW_GROUP_VALUE) {
+      setCreatingGroup(true)
+      setGroupSelection('')
+      setFieldErrors((f) => ({ ...f, newGroup: '' }))
+      setTimeout(() => newGroupRef.current?.focus(), 0)
+      return
+    }
+    setGroupSelection(value)
+  }
+
+  function cancelNewGroup() {
+    setCreatingGroup(false)
+    setNewGroupName('')
+    setFieldErrors((f) => ({ ...f, newGroup: '' }))
   }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -65,14 +93,50 @@ export function AddTaskForm({ onAdded, groups }: Props) {
       return
     }
 
+    const trimmedNewGroup = newGroupName.trim()
+    if (creatingGroup && !trimmedNewGroup) {
+      setFieldErrors({ newGroup: copy.groups.titleRequired })
+      newGroupRef.current?.focus()
+      return
+    }
+
     setPending(true)
     setFieldErrors({})
+
+    let effectiveGroupId: string | null = groupSelection || null
+
+    if (creatingGroup) {
+      const gres = await apiFetch<{ group: TaskGroup }>('/api/task-groups', {
+        method: 'POST',
+        body: JSON.stringify({ title: trimmedNewGroup }),
+      })
+      if (!gres.ok) {
+        setPending(false)
+        if (gres.error.code === 'VALIDATION_ERROR') {
+          const details = gres.error.details as
+            | { fields?: Record<string, string> }
+            | undefined
+          const msg = details?.fields?.title ?? copy.errors.VALIDATION_ERROR
+          setFieldErrors({ newGroup: msg })
+          newGroupRef.current?.focus()
+          return
+        }
+        const msg =
+          (copy.errors as Record<string, string | undefined>)[gres.error.code] ??
+          copy.errors.generic
+        toast.error(msg)
+        return
+      }
+      effectiveGroupId = gres.data.group.id
+      announce(copy.tasks.groupCreated)
+      onGroupCreated?.(gres.data.group)
+    }
 
     const payload = {
       title: trimmedTitle,
       difficulty: (difficultyTouched ? difficulty : null) as Difficulty | null,
       deadline: deadline ? new Date(deadline).toISOString() : null,
-      groupId: groupSelection || null,
+      groupId: effectiveGroupId,
     }
 
     const res = await apiFetch<MutationResponse>('/api/tasks', {
@@ -202,24 +266,61 @@ export function AddTaskForm({ onAdded, groups }: Props) {
 
         <div className="flex flex-col gap-1.5">
           <label
-            htmlFor={groupId}
+            htmlFor={creatingGroup ? newGroupId : groupId}
             className="text-sm font-medium text-[var(--text)]"
           >
-            {copy.tasks.groupLabel}
+            {creatingGroup ? copy.tasks.newGroupLabel : copy.tasks.groupLabel}
           </label>
-          <select
-            id={groupId}
-            value={groupSelection}
-            onChange={(e) => setGroupSelection(e.target.value)}
-            className="w-full rounded-md border border-[var(--border)] bg-[var(--raised)] px-3 py-2 text-base text-[var(--text)]"
-          >
-            <option value="">{copy.tasks.groupNone}</option>
-            {groups.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.title}
-              </option>
-            ))}
-          </select>
+          {creatingGroup ? (
+            <>
+              <div className="flex items-start gap-2">
+                <input
+                  ref={newGroupRef}
+                  id={newGroupId}
+                  type="text"
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  maxLength={TASK_GROUP_TITLE_MAX}
+                  placeholder={copy.tasks.newGroupPlaceholder}
+                  aria-invalid={fieldErrors.newGroup ? true : undefined}
+                  className={
+                    'flex-1 rounded-md border px-3 py-2 bg-[var(--raised)] text-[var(--text)] text-base ' +
+                    (fieldErrors.newGroup
+                      ? 'border-[var(--danger)]'
+                      : 'border-[var(--border)]')
+                  }
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={cancelNewGroup}
+                  aria-label={copy.tasks.newGroupCancel}
+                >
+                  {copy.tasks.editCancel}
+                </Button>
+              </div>
+              {fieldErrors.newGroup ? (
+                <p role="alert" className="text-sm text-[var(--danger)]">
+                  {fieldErrors.newGroup}
+                </p>
+              ) : null}
+            </>
+          ) : (
+            <select
+              id={groupId}
+              value={groupSelection}
+              onChange={(e) => onGroupChange(e.target.value)}
+              className="w-full rounded-md border border-[var(--border)] bg-[var(--raised)] px-3 py-2 text-base text-[var(--text)]"
+            >
+              <option value="">{copy.tasks.groupNone}</option>
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.title}
+                </option>
+              ))}
+              <option value={NEW_GROUP_VALUE}>{copy.tasks.groupNew}</option>
+            </select>
+          )}
         </div>
 
         <div>

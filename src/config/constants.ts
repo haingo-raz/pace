@@ -52,6 +52,8 @@ export const GOAL_PLAN_MAX_PER_HOUR = 10
 /** Account change-email attempts per user per hour. */
 export const CHANGE_EMAIL_MAX_PER_HOUR = 5
 export const CHANGE_EMAIL_WINDOW_MS = 60 * 60 * 1000
+/** Max completed tasks shown in the Done tab; older rows need a backfill link. */
+export const DONE_TASKS_LIMIT = 50
 /** A missed day of streak within this window keeps the streak alive. */
 export const STREAK_GRACE_DAYS = 2
 

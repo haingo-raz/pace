@@ -6,18 +6,43 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
-import { copy } from '@/content/en'
+import { apiFetch } from '@/lib/http'
+import { copy, fill } from '@/content/en'
 // import { ChangeEmailDialog } from './ChangeEmailDialog'
 import { DeleteAccountDialog } from './DeleteAccountDialog'
 
-type Props = { email: string }
+type Props = { email: string; streakPaused: boolean; streakCount: number }
 
-export function SettingsShell({ email }: Props) {
+export function SettingsShell({ email, streakPaused, streakCount }: Props) {
   const router = useRouter()
   const toast = useToast()
   const [signingOut, setSigningOut] = useState(false)
+  const [paused, setPaused] = useState(streakPaused)
+  const [pausing, setPausing] = useState(false)
   // const [changeOpen, setChangeOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+
+  async function toggleStreak() {
+    if (pausing) return
+    setPausing(true)
+    const next = !paused
+    const res = await apiFetch<{ profile: { streak_paused: boolean } }>(
+      '/api/account/streak',
+      { method: 'POST', body: JSON.stringify({ paused: next }) },
+    )
+    setPausing(false)
+    if (!res.ok) {
+      toast.error(copy.errors.generic)
+      return
+    }
+    setPaused(res.data.profile.streak_paused)
+    toast.success(
+      res.data.profile.streak_paused
+        ? copy.settings.streakPausedDone
+        : copy.settings.streakResumedDone,
+    )
+    router.refresh()
+  }
 
   async function signOut() {
     if (signingOut) return
@@ -67,6 +92,40 @@ export function SettingsShell({ email }: Props) {
             >
               {copy.settings.changeEmail}
             </Button> */}
+          </div>
+        </Card>
+      </section>
+
+      <section className="mt-6">
+        <h2
+          className="text-lg font-semibold text-[var(--text)]"
+          style={{ fontFamily: 'var(--font-fraunces)' }}
+        >
+          {copy.settings.streakHeading}
+        </h2>
+        <Card className="mt-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[var(--text)] font-medium">
+                {paused
+                  ? copy.settings.streakStatusPaused
+                  : copy.settings.streakStatusActive}
+              </p>
+              <p className="text-sm text-[var(--muted)]">
+                {paused
+                  ? fill(copy.settings.streakFrozenAt, { n: streakCount })
+                  : copy.settings.streakExplain}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={toggleStreak}
+              pending={pausing}
+              aria-pressed={paused}
+            >
+              {paused ? copy.settings.streakResume : copy.settings.streakPause}
+            </Button>
           </div>
         </Card>
       </section>
