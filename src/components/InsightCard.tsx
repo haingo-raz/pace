@@ -1,7 +1,9 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Sparkline } from '@/components/Sparkline'
+import { apiFetch } from '@/lib/http'
 import { copy, fill } from '@/content/en'
 import type { Insight, SparkSeries } from '@/lib/insights'
 import {
@@ -52,6 +54,28 @@ export function InsightCard({ insight, sentence, streakAtRisk }: Props) {
   const shouldHide =
     insight.kind === 'STEADY' || insight.kind === 'NEED_MORE_DATA'
 
+  const [liveSentence, setLiveSentence] = useState(sentence)
+
+  // Reset when the server-provided sentence changes (navigation, refresh).
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLiveSentence(sentence)
+  }, [sentence])
+
+  // Fetch a phrased sentence lazily so navigation stays fast.
+  useEffect(() => {
+    if (shouldHide) return
+    if (liveSentence) return
+    let cancelled = false
+    void apiFetch<{ sentence: string }>('/api/insight').then((res) => {
+      if (cancelled || !res.ok) return
+      if (res.data.sentence) setLiveSentence(res.data.sentence)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [shouldHide, liveSentence])
+
   if (shouldHide) {
     if (streakAtRisk) {
       return (
@@ -79,13 +103,15 @@ export function InsightCard({ insight, sentence, streakAtRisk }: Props) {
         </h2>
       </header>
 
-      <p className="mt-2 flex items-start gap-2 text-[var(--text)]">
-        <StarGlyph
-          className="mt-1 h-4 w-4 shrink-0 text-[var(--primary-strong)]"
-          aria-hidden="true"
-        />
-        <span>{sentence}</span>
-      </p>
+      {liveSentence ? (
+        <p className="mt-2 flex items-start gap-2 text-[var(--text)]">
+          <StarGlyph
+            className="mt-1 h-4 w-4 shrink-0 text-[var(--primary-strong)]"
+            aria-hidden="true"
+          />
+          <span>{liveSentence}</span>
+        </p>
+      ) : null}
 
       <div className="mt-4 grid grid-cols-2 gap-4">
         <SparkCell series={insight.evidence.primary} />

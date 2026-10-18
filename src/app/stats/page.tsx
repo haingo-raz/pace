@@ -8,7 +8,7 @@ import { requireUser } from '@/lib/auth'
 import { getStats } from '@/lib/queries/stats'
 import { getProfile } from '@/lib/queries/profile'
 import { todayFor } from '@/lib/queries/day'
-import { loadInsight } from '@/lib/insightLoader'
+import { loadInsightFast } from '@/lib/insightLoader'
 import { copy, fill } from '@/content/en'
 import {
   DEFAULT_TIMEZONE,
@@ -49,7 +49,7 @@ export default async function StatsPage({
   const today = todayFor(timezone)
   const [stats, insightPayload] = await Promise.all([
     getStats(userId, timezone, today, days),
-    loadInsight(userId, timezone, today, profile?.streak_count ?? 0, 'stats_load'),
+    loadInsightFast(userId, timezone, today, profile?.streak_count ?? 0),
   ])
   const streak = profile?.streak_count ?? 0
   const hasData = stats.totals.checkinsInRange >= STATS_MIN_DATA_DAYS

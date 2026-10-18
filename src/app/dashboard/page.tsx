@@ -8,7 +8,7 @@ import { listActiveTasks, listDoneTasks } from '@/lib/queries/tasks'
 import { listGroups } from '@/lib/queries/taskGroups'
 import { todayFor } from '@/lib/queries/day'
 import { getTodayTotals } from '@/lib/queries/insights'
-import { loadInsight } from '@/lib/insightLoader'
+import { loadInsightFast } from '@/lib/insightLoader'
 import { DONE_TASKS_LIMIT } from '@/config/constants'
 
 export const instant = false
@@ -31,12 +31,11 @@ export default async function DashboardPage({
       listGroups(userId),
       listActiveTasks(userId),
       listDoneTasks(userId, DONE_TASKS_LIMIT),
-      loadInsight(
+      loadInsightFast(
         userId,
         profile.timezone,
         today,
         profile.streak_count,
-        'dashboard_load',
       ),
       getTodayTotals(userId, profile.timezone, today),
     ],

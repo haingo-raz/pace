@@ -10,6 +10,8 @@ import { phrasedSentence } from '@/lib/insightCopy'
 export type InsightPayload = {
   insight: Insight
   sentence: string
+  /** True when the cache hit; false when the client should fetch /api/insight. */
+  cached: boolean
 }
 
 function numbersEqual(
@@ -23,12 +25,12 @@ function numbersEqual(
   return true
 }
 
-export async function loadInsight(
+
+export async function loadInsightFast(
   userId: string,
   timezone: string,
   today: string,
   streak: number,
-  requestId: string,
 ): Promise<InsightPayload> {
   const series = await getInsightSeries(userId, timezone, today)
   const insight = detectInsight(series.rows, {
@@ -42,7 +44,7 @@ export async function loadInsight(
     insight.kind !== 'STEADY' && insight.kind !== 'NEED_MORE_DATA'
 
   if (!needsPhrase) {
-    return { insight, sentence: '' }
+    return { insight, sentence: '', cached: true }
   }
 
   const cached = await getInsightCache(userId, today)
@@ -52,20 +54,40 @@ export async function loadInsight(
     cached.kind === insight.kind &&
     numbersEqual(cached.numbers, numbers)
   ) {
-    return { insight, sentence: cached.sentence }
+    return { insight, sentence: cached.sentence, cached: true }
   }
+
+  return { insight, sentence: '', cached: false }
+}
+
+
+export async function loadInsight(
+  userId: string,
+  timezone: string,
+  today: string,
+  streak: number,
+  requestId: string,
+): Promise<InsightPayload> {
+  const fast = await loadInsightFast(userId, timezone, today, streak)
+  if (fast.cached) return fast
 
   const sentence = await phrasedSentence(
     userId,
-    insight.kind,
-    numbers,
+    fast.insight.kind,
+    fast.insight.evidence.numbers,
     today,
     requestId,
   )
 
   if (sentence) {
-    await setInsightCache(userId, today, insight.kind, numbers, sentence)
+    await setInsightCache(
+      userId,
+      today,
+      fast.insight.kind,
+      fast.insight.evidence.numbers,
+      sentence,
+    )
   }
 
-  return { insight, sentence }
+  return { insight: fast.insight, sentence, cached: true }
 }
