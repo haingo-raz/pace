@@ -52,6 +52,18 @@ type TasksResponse = {
 type View = 'active' | 'done'
 type InputTab = 'manual' | 'plan'
 
+const INPUT_TAB_STORAGE_KEY = 'pace.dashboard.inputTab'
+
+function loadInputTab(): InputTab {
+  if (typeof window === 'undefined') return 'plan'
+  try {
+    const raw = window.localStorage.getItem(INPUT_TAB_STORAGE_KEY)
+    if (raw === 'manual' || raw === 'plan') return raw
+  } catch {
+  }
+  return 'plan'
+}
+
 export function DashboardShell({
   pointsTotal,
   streakCount,
@@ -80,7 +92,21 @@ export function DashboardShell({
   const [done, setDone] = useState<Task[]>(initialDone)
   const [doneTruncated, setDoneTruncated] = useState(initialDoneTruncated)
   const [refreshFailed, setRefreshFailed] = useState(false)
-  const [inputTab, setInputTab] = useState<InputTab>('manual')
+  const [inputTab, setInputTabState] = useState<InputTab>('plan')
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setInputTabState(loadInputTab())
+  }, [])
+
+  const setInputTab = useCallback((next: InputTab) => {
+    setInputTabState(next)
+    try {
+      window.localStorage.setItem(INPUT_TAB_STORAGE_KEY, next)
+    } catch {
+
+    }
+  }, [])
   const [view, setView] = useState<View>(initialView)
 
   const inputTabRefs = useRef<Record<InputTab, HTMLButtonElement | null>>({
